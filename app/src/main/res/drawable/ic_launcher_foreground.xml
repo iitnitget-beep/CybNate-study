@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Bumblebee Stylized Cybernetic Face in pure white (centered in safe zone 26 to 82) -->
+    
+    <!-- Central Crest -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28 L61,37 L57,45 L51,45 L47,37 Z" />
+
+    <!-- Left Antenna / Horn -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,34 L33,29 L36,43 L45,44 Z" />
+
+    <!-- Right Antenna / Horn -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M64,34 L75,29 L72,43 L63,44 Z" />
+
+    <!-- Forehead / Brow plate -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M31,48 L54,51 L77,48 L81,56 L72,57 L54,55 L36,57 L27,56 Z" />
+
+    <!-- Left Eye Visor -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,60 L48,60 L46,67 L39,65 Z" />
+
+    <!-- Right Eye Visor -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,60 L70,60 L69,65 L62,67 Z" />
+
+    <!-- Left Cheek Guard -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M29,59 L36,61 L37,73 L32,78 L26,67 Z" />
+
+    <!-- Right Cheek Guard -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M79,59 L72,61 L71,73 L76,78 L82,67 Z" />
+
+    <!-- Central Mouthplate and Chin Guard -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,62 L56,62 L57,72 L65,78 L60,88 L54,91 L48,88 L43,78 L51,72 Z" />
+</vector>

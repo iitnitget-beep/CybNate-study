@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude sensitive credentials, lockout prefs, and App Check secrets from cloud backup -->
+    <exclude domain="sharedpref" path="marks_auth_lockout_prefs.xml"/>
+    <exclude domain="sharedpref" path="com.google.firebase.appcheck.debug.store.*"/>
+    <exclude domain="root" path="databases/"/>
+</full-backup-content>
