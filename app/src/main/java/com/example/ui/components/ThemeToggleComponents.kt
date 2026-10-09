@@ -218,6 +218,138 @@ fun ThemeSettingsCard(
                     testTag = "theme_option_dark"
                 )
             }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // 5 UI/UX Themes Selector (including Metallic Chrome)
+            Text(
+                text = "Select UI/UX Theme (5 Themes)",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "Choose your preferred aesthetic style, accents, and liquid shader effects:",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp, bottom = 10.dp)
+            )
+
+            val currentPreset by ThemePreferences.themePreset.collectAsState()
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                com.example.ui.theme.AppThemePreset.values().forEach { preset ->
+                    val isSelected = currentPreset == preset
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable { ThemePreferences.setThemePreset(preset) }
+                            .border(
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) Color(preset.primaryHex) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .testTag("theme_preset_${preset.name.lowercase()}"),
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isSelected) Color(preset.primaryHex).copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                // Color swatch
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(
+                                            androidx.compose.ui.graphics.Brush.linearGradient(
+                                                colors = listOf(
+                                                    Color(preset.primaryHex),
+                                                    Color(preset.secondaryHex)
+                                                )
+                                            )
+                                        )
+                                        .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (preset == com.example.ui.theme.AppThemePreset.METALLIC_TITANIUM) {
+                                        Text(text = "⚡", fontSize = 14.sp)
+                                    } else if (preset == com.example.ui.theme.AppThemePreset.CYBER_GOLD) {
+                                        Text(text = "🌟", fontSize = 14.sp)
+                                    } else if (preset == com.example.ui.theme.AppThemePreset.NEON_CYBERPUNK) {
+                                        Text(text = "🟣", fontSize = 14.sp)
+                                    } else if (preset == com.example.ui.theme.AppThemePreset.AURORA_EMERALD) {
+                                        Text(text = "🌿", fontSize = 14.sp)
+                                    } else {
+                                        Text(text = "🌊", fontSize = 14.sp)
+                                    }
+                                }
+
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = preset.title,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (preset == com.example.ui.theme.AppThemePreset.METALLIC_TITANIUM) {
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = Color(0xFF64748B).copy(alpha = 0.25f)
+                                            ) {
+                                                Text(
+                                                    text = "METALLIC",
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = if (isDark) Color(0xFFE2E8F0) else Color(0xFF334155),
+                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = preset.subtitle,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            if (isSelected) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(preset.primaryHex),
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = Color.Black,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

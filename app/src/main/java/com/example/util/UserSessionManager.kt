@@ -74,4 +74,14 @@ object UserSessionManager {
     fun clearSession(context: Context) {
         getPrefs(context).edit().clear().apply()
     }
+
+    private const val KEY_TARGET_STREAM = "key_target_stream"
+
+    fun getTargetStream(context: Context): String {
+        return getPrefs(context).getString(KEY_TARGET_STREAM, "Engineering") ?: "Engineering"
+    }
+
+    fun setTargetStream(context: Context, stream: String) {
+        getPrefs(context).edit().putString(KEY_TARGET_STREAM, stream).apply()
+    }
 }

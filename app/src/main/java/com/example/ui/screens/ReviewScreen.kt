@@ -109,38 +109,43 @@ fun ReviewScreen(
     val safeIndex = currentFilteredIndex.coerceIn(0, (filteredQuestions.size - 1).coerceAtLeast(0))
     val currentQuestion = filteredQuestions.getOrNull(safeIndex)
 
-    Scaffold(
-        topBar = {
-            MarksTopAppBar(
-                title = "Solutions & Explanations",
-                subtitle = attempt.testTitle.ifBlank { "Solution Review" },
-                onBackClick = onBackClick,
-                actions = {
-                    com.example.ui.components.ThemeToggleIconButton()
-                    if (currentQuestion != null) {
-                        val isBookmarked = viewModel.isBookmarked(currentQuestion.id)
-                        IconButton(
-                            onClick = { viewModel.toggleBookmark(currentQuestion) },
-                            modifier = Modifier.testTag("review_bookmark_button")
-                        ) {
-                            Icon(
-                                imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = "Bookmark",
-                                tint = if (isBookmarked) MarksWarning else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.AURORA_CALM,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                MarksTopAppBar(
+                    title = "Solutions & Explanations",
+                    subtitle = attempt.testTitle.ifBlank { "Solution Review" },
+                    onBackClick = onBackClick,
+                    actions = {
+                        if (currentQuestion != null) {
+                            val isBookmarked = viewModel.isBookmarked(currentQuestion.id)
+                            IconButton(
+                                onClick = { viewModel.toggleBookmark(currentQuestion) },
+                                modifier = Modifier.testTag("review_bookmark_button")
+                            ) {
+                                Icon(
+                                    imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                    contentDescription = "Bookmark",
+                                    tint = if (isBookmarked) MarksWarning else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
-                }
-            )
-        },
-        bottomBar = {
-            if (filteredQuestions.isNotEmpty()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                )
+            },
+            bottomBar = {
+                if (filteredQuestions.isNotEmpty()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                        tonalElevation = 8.dp,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -598,4 +603,5 @@ fun ReviewScreen(
             onDismiss = { zoomedImageUrl = null }
         )
     }
+}
 }

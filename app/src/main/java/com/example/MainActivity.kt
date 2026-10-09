@@ -32,9 +32,9 @@ import com.example.ui.screens.PracticeScreen
 import com.example.ui.screens.ProfileHistoryScreen
 import com.example.ui.screens.ResultScreen
 import com.example.ui.screens.ReviewScreen
-import com.example.ui.screens.ScienceSkillsScreen
 import com.example.ui.screens.TestInstructionsScreen
 import com.example.ui.screens.TestScreen
+import com.example.ui.theme.CybNateTheme
 import com.example.ui.theme.MarksTheme
 import com.example.ui.viewmodel.MarksViewModel
 import com.example.util.AuthManager
@@ -59,8 +59,7 @@ enum class AppScreen {
     TEST_SCREEN,
     RESULT_SCREEN,
     REVIEW_SCREEN,
-    PROFILE_HISTORY,
-    SCIENCE_SKILLS
+    PROFILE_HISTORY
 }
 
 class MainActivity : ComponentActivity() {
@@ -105,12 +104,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MarksTheme {
+            CybNateTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MarksAppContent()
+                    CybNateAppContent()
                 }
             }
         }
@@ -118,7 +117,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MarksAppContent() {
+fun MarksAppContent() = CybNateAppContent()
+
+@Composable
+fun CybNateAppContent() {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
@@ -166,9 +168,9 @@ fun MarksAppContent() {
                     authMethod = if (!user.phoneNumber.isNullOrBlank()) "phone" else "google"
                 )
             } else {
-                // If Firebase auth user became null, check if session is Guest mode
+                // Firebase auth user is null - check if there is an active logged-in session
                 val session = UserSessionManager.getSession(context)
-                if (!session.isGuest && !session.isLoggedIn) {
+                if (!session.isLoggedIn) {
                     isUserLoggedIn = false
                     googleAccountUserName = null
                 }
@@ -214,7 +216,7 @@ fun MarksAppContent() {
             onGoogleAuthSuccess = { displayName ->
                 val user = Firebase.auth.currentUser
                 currentUser = user
-                val isGuest = displayName == "Guest Aspirant" || (user == null && displayName?.isNotBlank() == true)
+                val isGuest = displayName == "Guest Aspirant"
                 val resolvedName = displayName?.ifBlank { null }
                     ?: user?.displayName?.ifBlank { null }
                     ?: user?.email?.ifBlank { null }
@@ -228,12 +230,12 @@ fun MarksAppContent() {
                     context = context,
                     userName = resolvedName,
                     isGuest = isGuest,
-                    userId = user?.uid ?: if (isGuest) "guest_${System.currentTimeMillis()}" else "user",
+                    userId = user?.uid ?: if (isGuest) "guest_${System.currentTimeMillis()}" else "user_${System.currentTimeMillis()}",
                     userEmail = user?.email ?: "",
                     authMethod = when {
                         isGuest -> "guest"
                         !user?.phoneNumber.isNullOrBlank() -> "phone"
-                        else -> "google"
+                        else -> "account"
                     }
                 )
             }
@@ -248,6 +250,7 @@ fun MarksAppContent() {
 
         var currentScreen by remember { mutableStateOf(AppScreen.HOME) }
         var selectedTest by remember { mutableStateOf<Test?>(null) }
+        var selectedExamBranchName by remember { mutableStateOf("JEE Main") }
         var lastAttempt by remember { mutableStateOf<Attempt?>(null) }
         var reviewQuestions by remember { mutableStateOf<List<Question>>(emptyList()) }
 
@@ -263,8 +266,15 @@ fun MarksAppContent() {
                     HomeScreen(
                         viewModel = viewModel,
                         googleUserName = googleAccountUserName,
+                        onExamClick = { branch ->
+                            selectedExamBranchName = branch.displayName.ifBlank { branch.name }
+                            viewModel.selectExamBranch(branch.name)
+                            selectedTest = null
+                            currentScreen = AppScreen.EXAM_PRACTICE
+                        },
                         onTestClick = { test ->
                             selectedTest = test
+                            selectedExamBranchName = test.exam.ifBlank { "JEE Main" }
                             currentScreen = AppScreen.EXAM_PRACTICE
                         },
                         onAttemptReviewClick = { attempt ->
@@ -289,24 +299,30 @@ fun MarksAppContent() {
                         },
                         onProfileClick = {
                             currentScreen = AppScreen.PROFILE_HISTORY
-                        },
-                        onScienceSkillsClick = {
-                            currentScreen = AppScreen.SCIENCE_SKILLS
                         }
                     )
                 }
 
                 AppScreen.EXAM_PRACTICE -> {
+                    BackHandler {
+                        currentScreen = AppScreen.HOME
+                    }
                     val test = selectedTest
-                    val isNeet = test?.exam?.contains("neet", true) == true || viewModel.selectedExamBranch.value.contains("neet", true)
-                    val examTitle = if (isNeet) "NEET Medical" else (test?.exam?.ifBlank { "JEE Main" } ?: "JEE Main")
+                    val isNeet = selectedExamBranchName.contains("neet", true) ||
+                                 selectedExamBranchName.contains("aiims", true) ||
+                                 selectedExamBranchName.contains("jipmer", true) ||
+                                 test?.exam?.contains("neet", true) == true ||
+                                 viewModel.selectedExamBranch.value.contains("neet", true)
+                    val examTitle = selectedExamBranchName.ifBlank {
+                        if (isNeet) "NEET Medical" else (test?.exam?.ifBlank { "JEE Main" } ?: "JEE Main")
+                    }
                     val initTab = if (isNeet) {
                         when {
                             test?.subject?.contains("chem", true) == true -> "Chem"
                             test?.subject?.contains("zoo", true) == true -> "Zoo"
                             test?.subject?.contains("botan", true) == true -> "Bot"
                             test?.subject?.contains("phys", true) == true -> "Phy"
-                            else -> "Chem"
+                            else -> "Phy"
                         }
                     } else {
                         when {
@@ -476,17 +492,6 @@ fun MarksAppContent() {
                             currentUser = null
                             googleAccountUserName = null
                             isUserLoggedIn = false
-                            currentScreen = AppScreen.HOME
-                        }
-                    )
-                }
-
-                AppScreen.SCIENCE_SKILLS -> {
-                    BackHandler {
-                        currentScreen = AppScreen.HOME
-                    }
-                    ScienceSkillsScreen(
-                        onBackClick = {
                             currentScreen = AppScreen.HOME
                         }
                     )

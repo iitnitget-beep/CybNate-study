@@ -89,158 +89,147 @@ fun ResultScreen(
     val timeSeconds = attempt.timeTakenSeconds % 60
     val timeFormatted = "${timeMinutes}m ${timeSeconds}s"
 
-    Scaffold(
-        topBar = {
-            MarksTopAppBar(
-                title = "Test Analysis",
-                subtitle = attempt.testTitle.ifBlank { "Performance Summary" },
-                onBackClick = onHomeClick,
-                actions = {
-                    com.example.ui.components.ThemeToggleIconButton()
-                }
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.AURORA_CALM,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                MarksTopAppBar(
+                    title = "Test Analysis",
+                    subtitle = attempt.testTitle.ifBlank { "Performance Summary" },
+                    onBackClick = onHomeClick
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Button(
-                        onClick = onReviewClick,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MarksPrimary),
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("review_solutions_button")
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(Icons.Default.AssignmentTurnedIn, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("View Solutions & Detailed Explanations", fontWeight = FontWeight.Bold)
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onRetakeClick,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
-                        ) {
-                            Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Retake", fontWeight = FontWeight.SemiBold)
-                        }
-
                         Button(
-                            onClick = onHomeClick,
+                            onClick = onReviewClick,
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                            colors = ButtonDefaults.buttonColors(containerColor = MarksPrimary),
                             modifier = Modifier
-                                .weight(1f)
-                                .height(46.dp)
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("review_solutions_button")
                         ) {
-                            Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Dashboard", fontWeight = FontWeight.SemiBold)
+                            Icon(Icons.Default.AssignmentTurnedIn, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("View Solutions & Detailed Explanations", fontWeight = FontWeight.Bold)
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = onRetakeClick,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                            ) {
+                                Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Retake", fontWeight = FontWeight.SemiBold)
+                            }
+
+                            Button(
+                                onClick = onHomeClick,
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp)
+                            ) {
+                                Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Dashboard", fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
                 }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Main Score Banner
-            Card(
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.fillMaxWidth()
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF0F1117),
-                                    Color(0xFF261D00),
-                                    Color(0xFF3B2C00)
-                                )
-                            )
-                        )
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
+                // Main Score Banner with Liquid Glass
+                com.example.ui.components.LiquidGlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 24.dp,
+                    tintColor = MaterialTheme.colorScheme.surface,
+                    frostAlpha = 0.65f,
+                    borderGlowColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.5f)
                 ) {
-                    // Scanning cyber grid
-                    com.example.ui.components.CybertronScanningGrid(
-                        gridColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.08f),
-                        scanLineColor = com.example.ui.theme.EnergonBlueBright.copy(alpha = 0.3f)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.2f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.5f)),
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            ) {
+                                Text(
+                                    text = performanceBadge,
+                                    color = com.example.ui.theme.BumblebeeYellowBright,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                )
+                            }
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.2f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.5f)),
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        ) {
                             Text(
-                                text = performanceBadge,
-                                color = com.example.ui.theme.BumblebeeYellowBright,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                text = "${attempt.score.toInt()}",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.example.ui.theme.BumblebeeYellowBright
+                            )
+
+                            Text(
+                                text = "out of ${attempt.totalMarks.toInt()} Marks ($percentage%)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            // Score progress bar
+                            LinearProgressIndicator(
+                                progress = { (percentage / 100f).coerceIn(0f, 1f) },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.8f)
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = com.example.ui.theme.EnergonBlueBright,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
                         }
-
-                        Text(
-                            text = "${attempt.score.toInt()}",
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = com.example.ui.theme.BumblebeeYellowBright
-                        )
-
-                        Text(
-                            text = "out of ${attempt.totalMarks.toInt()} Marks ($percentage%)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.9f)
-                        )
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        // Score progress bar
-                        LinearProgressIndicator(
-                            progress = { (percentage / 100f).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .fillMaxWidth(0.8f)
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = com.example.ui.theme.EnergonBlueBright,
-                            trackColor = Color.White.copy(alpha = 0.2f)
-                        )
                     }
                 }
-            }
 
             // Key Metrics Breakdown Row
             Row(
@@ -358,6 +347,7 @@ fun ResultScreen(
         }
     }
 }
+}
 
 @Composable
 private fun MetricCard(
@@ -367,10 +357,11 @@ private fun MetricCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    com.example.ui.components.LiquidGlassCard(
+        cornerRadius = 16.dp,
+        tintColor = MaterialTheme.colorScheme.surface,
+        frostAlpha = 0.65f,
+        borderGlowColor = color.copy(alpha = 0.25f),
         modifier = modifier
     ) {
         Column(

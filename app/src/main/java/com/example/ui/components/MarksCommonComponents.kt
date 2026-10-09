@@ -65,6 +65,15 @@ import com.example.ui.theme.Slate600
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun CybNateTopAppBar(
+    title: String,
+    subtitle: String? = null,
+    onBackClick: (() -> Unit)? = null,
+    actions: @Composable () -> Unit = {}
+) = MarksTopAppBar(title, subtitle, onBackClick, actions)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun MarksTopAppBar(
     title: String,
     subtitle: String? = null,

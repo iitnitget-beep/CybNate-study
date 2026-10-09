@@ -4,50 +4,38 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Bumblebee Stylized Cybernetic Face in pure white (centered in safe zone 26 to 82) -->
-    
-    <!-- Central Crest -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,28 L61,37 L57,45 L51,45 L47,37 Z" />
+    <!-- Futuristic Metallic Cyber-Matrix Insignia (strictly in safe zone 27-81) -->
 
-    <!-- Left Antenna / Horn -->
+    <!-- Outer Metallic Diamond Armor Shield -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M44,34 L33,29 L36,43 L45,44 Z" />
+        android:fillColor="#E2E8F0"
+        android:pathData="M54,28 L78,44 L78,64 L54,80 L30,64 L30,44 Z" />
 
-    <!-- Right Antenna / Horn -->
+    <!-- Inner Titanium Core Cutout -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M64,34 L75,29 L72,43 L63,44 Z" />
+        android:fillColor="#0F172A"
+        android:pathData="M54,34 L72,46 L72,62 L54,74 L36,62 L36,46 Z" />
 
-    <!-- Forehead / Brow plate -->
+    <!-- Central Cyber Matrix Star / Stinger in Amber Gold -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M31,48 L54,51 L77,48 L81,56 L72,57 L54,55 L36,57 L27,56 Z" />
+        android:fillColor="#FFB800"
+        android:pathData="M54,39 L57,51 L69,54 L57,57 L54,69 L51,57 L39,54 L51,51 Z" />
 
-    <!-- Left Eye Visor -->
+    <!-- Top Chrome Glint Wing -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M38,60 L48,60 L46,67 L39,65 Z" />
+        android:pathData="M54,31 L64,38 L54,42 L44,38 Z" />
 
-    <!-- Right Eye Visor -->
+    <!-- Left & Right Energon Cyan Sensor Nodes -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M60,60 L70,60 L69,65 L62,67 Z" />
+        android:fillColor="#00E5FF"
+        android:pathData="M33,48 L37,45 L37,55 L33,52 Z" />
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M75,48 L71,45 L71,55 L75,52 Z" />
 
-    <!-- Left Cheek Guard -->
+    <!-- Bottom Precision Targeting Chevron -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M29,59 L36,61 L37,73 L32,78 L26,67 Z" />
-
-    <!-- Right Cheek Guard -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M79,59 L72,61 L71,73 L76,78 L82,67 Z" />
-
-    <!-- Central Mouthplate and Chin Guard -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M52,62 L56,62 L57,72 L65,78 L60,88 L54,91 L48,88 L43,78 L51,72 Z" />
+        android:fillColor="#CBD5E1"
+        android:pathData="M54,77 L62,71 L60,69 L54,73 L48,69 L46,71 Z" />
 </vector>

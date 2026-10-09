@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -89,12 +88,13 @@ import com.google.firebase.auth.auth
 fun HomeScreen(
     viewModel: MarksViewModel,
     googleUserName: String? = null,
+    onExamClick: (ExamBranch) -> Unit = {},
     onTestClick: (Test) -> Unit,
     onAttemptReviewClick: (Attempt) -> Unit,
-    onProfileClick: () -> Unit,
-    onScienceSkillsClick: () -> Unit = {}
+    onProfileClick: () -> Unit
 ) {
     val examBranches by viewModel.examBranchesState.collectAsState()
+    val targetStream by viewModel.targetStream.collectAsState()
     val selectedBranch by viewModel.selectedExamBranch.collectAsState()
     val categoriesState by viewModel.categoriesState.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
@@ -105,89 +105,85 @@ fun HomeScreen(
     val currentUser = Firebase.auth.currentUser
     val isGoogleAccountUser = (currentUser != null && !currentUser.isAnonymous) || googleUserName != null
     val userName = googleUserName ?: (if (currentUser != null && !currentUser.isAnonymous) currentUser.displayName ?: "Aspirant" else "Guest Aspirant")
+    val isMedical = targetStream.equals("Medical", ignoreCase = true)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.2f))
-                                .border(1.5.dp, com.example.ui.theme.BumblebeeYellow, RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.AUTO_PRESET,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .border(1.2.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(12.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                com.example.ui.components.LiquidMorphingLogo(
+                                    size = 36.dp,
+                                    primaryColor = MaterialTheme.colorScheme.primary,
+                                    secondaryColor = MaterialTheme.colorScheme.secondary,
+                                    accentColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "CybNate",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Target: $targetStream Track",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isMedical) MarksSuccess else MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = onProfileClick,
+                            modifier = Modifier.testTag("home_profile_button")
                         ) {
-                            com.example.ui.components.BumblebeeFaceLogo(
-                                size = 26.dp,
-                                tint = com.example.ui.theme.BumblebeeYellowBright,
-                                animatedOptics = true
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .border(1.2.dp, Color.White.copy(alpha = 0.25f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "CybNate",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Target: $selectedBranch Examination",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    com.example.ui.components.ThemeToggleIconButton()
-
-                    IconButton(
-                        onClick = { viewModel.refreshData() },
-                        modifier = Modifier.testTag("sync_firestore_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh from Firestore",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    IconButton(
-                        onClick = onProfileClick,
-                        modifier = Modifier.testTag("home_profile_button")
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MarksPrimary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = MarksPrimary
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
                 )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = 32.dp)
-        ) {
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(bottom = 32.dp)
+            ) {
             // 1. Welcome & Prep Stats Banner
             item {
                 HomeHeaderBanner(
@@ -197,288 +193,76 @@ fun HomeScreen(
                 )
             }
 
-            // Science Skills Hub Banner
-            item {
-                Spacer(modifier = Modifier.height(14.dp))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .clickable { onScienceSkillsClick() }
-                        .testTag("science_skills_hub_banner"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MarksPrimary.copy(alpha = 0.35f))
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(44.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MarksPrimary.copy(alpha = 0.15f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("🧪", fontSize = 22.sp)
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Science Skills Hub",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MarksSuccess.copy(alpha = 0.2f)
-                                    ) {
-                                        Text(
-                                            text = "NEW",
-                                            color = MarksSuccess,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = "Virtual Vernier, Screw Gauge, Salt Analysis & Lab PYQs",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Open Science Skills",
-                            tint = MarksPrimary
-                        )
-                    }
-                }
-            }
-
-            // 2. EXAM BRANCHES SECTION (Engineering and Medical Chapter-wise PYQs)
+            // 2. EXAM BRANCHES SECTION (Filtered by user's Target Stream: Engineering or Medical)
             item {
                 Spacer(modifier = Modifier.height(16.dp))
+                val engineeringExams = examBranches.filter { it.category == "Engineering" || (!it.category.equals("Medical", true) && !it.id.contains("neet") && !it.id.contains("aiims") && !it.id.contains("jipmer")) }
+                val medicalExams = examBranches.filter { it.category == "Medical" || it.id.contains("neet") || it.id.contains("aiims") || it.id.contains("jipmer") }
+                val visibleExams = if (isMedical) medicalExams else engineeringExams
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "Chapter-wise Previous Year Questions",
+                            text = if (isMedical) "Medical Entrance Exams" else "Engineering Entrance Exams",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "2001 - 2026",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MarksPrimary,
-                            fontWeight = FontWeight.Bold
+                            text = if (isMedical) "NEET UG, AIIMS, JIPMER 15+ Years Solved Papers" else "JEE Main, Adv, BITSAT 15+ Years Solved Papers",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
-                        text = "Engineering & Medical 15+ Years Solved Papers",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Engineering Exams Subsection
-                val engineeringExams = examBranches.filter { it.category == "Engineering" || (!it.category.equals("Medical", true) && !it.id.contains("neet") && !it.id.contains("aiims") && !it.id.contains("jipmer")) }
-                val medicalExams = examBranches.filter { it.category == "Medical" || it.id.contains("neet") || it.id.contains("aiims") || it.id.contains("jipmer") }
-
-                if (engineeringExams.isNotEmpty()) {
-                    Text(
-                        text = "Engineering",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
                     Spacer(modifier = Modifier.height(6.dp))
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(engineeringExams) { branch ->
-                            val isSelected = selectedBranch.equals(branch.name, ignoreCase = true) || selectedBranch.equals(branch.displayName, ignoreCase = true)
-                            ExamGridCardItem(
-                                branch = branch,
-                                isSelected = isSelected,
-                                onClick = { viewModel.selectExamBranch(branch.name) }
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (medicalExams.isNotEmpty()) {
                     Text(
-                        text = "Medical",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MarksSuccess,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        text = "Touch any exam below to open its chapter-wise practice and PYQ sets:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(medicalExams) { branch ->
-                            val isSelected = selectedBranch.equals(branch.name, ignoreCase = true) || selectedBranch.equals(branch.displayName, ignoreCase = true)
-                            ExamGridCardItem(
-                                branch = branch,
-                                isSelected = isSelected,
-                                onClick = { viewModel.selectExamBranch(branch.name) }
-                            )
-                        }
-                    }
                 }
-            }
 
-            // 3. Categories / Subjects under Selected Exam
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = "$selectedBranch Subjects & Chapters",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                when (val catState = categoriesState) {
-                    is UiState.Loading -> {
-                        LoadingSkeleton("Loading $selectedBranch subjects...")
-                    }
-                    is UiState.Error -> {
-                        Text(
-                            text = catState.message,
-                            color = MarksError,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                    }
-                    is UiState.Success -> {
-                        val categories = catState.data
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            item {
-                                FilterChip(
-                                    selected = selectedCategoryId == null,
-                                    onClick = { viewModel.selectCategory(null) },
-                                    label = { Text("All $selectedBranch Chapter Sets") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MarksPrimary,
-                                        selectedLabelColor = Color.White
-                                    )
-                                )
-                            }
-                            items(categories) { cat ->
-                                FilterChip(
-                                    selected = selectedCategoryId == cat.id,
-                                    onClick = { viewModel.selectCategory(cat.id) },
-                                    label = { Text(cat.name) },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MarksPrimary,
-                                        selectedLabelColor = Color.White
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 4. Test Series Section Header
-            item {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Primary Horizontal Exam Cards
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "$selectedBranch Chapter Practice",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            // 5. Test Series List (Real-Time from Firestore)
-            when (val tState = testsState) {
-                is UiState.Loading -> {
-                    item {
-                        LoadingSkeleton("Fetching $selectedBranch practice sets from Firestore...")
-                    }
-                }
-                is UiState.Error -> {
-                    item {
-                        EmptyView(
-                            title = "Unable to load chapter practice",
-                            description = tState.message
+                    items(visibleExams) { branch ->
+                        val isSelected = selectedBranch.equals(branch.name, ignoreCase = true) || selectedBranch.equals(branch.displayName, ignoreCase = true)
+                        ExamGridCardItem(
+                            branch = branch,
+                            isSelected = isSelected,
+                            onClick = {
+                                viewModel.selectExamBranch(branch.name)
+                                onExamClick(branch)
+                            }
                         )
                     }
                 }
-                is UiState.Success -> {
-                    val tests = tState.data
-                    if (tests.isEmpty()) {
-                        item {
-                            EmptyView(
-                                title = "No practice sets found for $selectedBranch",
-                                description = "Upload new practice sets with exam: \"$selectedBranch\" in Firestore and they will automatically appear here!",
-                                actionButton = {
-                                    Button(
-                                        onClick = { viewModel.refreshData() },
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MarksPrimary)
-                                    ) {
-                                        Text("Refresh Practice Sets")
-                                    }
-                                }
-                            )
-                        }
-                    } else {
-                        items(tests) { test ->
-                            TestCard(
-                                test = test,
-                                onTestClick = { onTestClick(test) }
-                            )
-                        }
+            }
+
+            // 3. Complete List of Exams in Chosen Stream (Clicking opens dedicated chapter practice page)
+            val currentStreamExams = if (isMedical) {
+                examBranches.filter { it.category == "Medical" || it.id.contains("neet") || it.id.contains("aiims") || it.id.contains("jipmer") }
+            } else {
+                examBranches.filter { it.category == "Engineering" || (!it.category.equals("Medical", true) && !it.id.contains("neet") && !it.id.contains("aiims") && !it.id.contains("jipmer")) }
+            }
+
+            items(currentStreamExams) { branch ->
+                ExamListCardItem(
+                    branch = branch,
+                    onClick = {
+                        viewModel.selectExamBranch(branch.name)
+                        onExamClick(branch)
                     }
-                }
+                )
             }
 
             // 6. Recent Attempts Section
@@ -506,6 +290,7 @@ fun HomeScreen(
         }
     }
 }
+}
 
 @Composable
 private fun HomeHeaderBanner(
@@ -523,80 +308,69 @@ private fun HomeHeaderBanner(
         0
     }
 
-    Card(
+    com.example.ui.components.LiquidGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        cornerRadius = 24.dp,
+        tintColor = MaterialTheme.colorScheme.surface,
+        frostAlpha = 0.55f,
+        borderGlowColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.45f)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF0F1117), // Bumblebee Stinger Chassis Dark
-                            Color(0xFF1E1700), // Cybertron Warm Core
-                            Color(0xFF2B1D00)  // Gold Energon Ambient
-                        )
-                    )
-                )
-                .padding(18.dp)
+                .padding(20.dp)
         ) {
-            // Cybertron Scanning Grid background
-            com.example.ui.components.CybertronScanningGrid(
-                gridColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.08f),
-                scanLineColor = com.example.ui.theme.EnergonBlueBright.copy(alpha = 0.35f)
-            )
-
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "Hello, $userName! ⚡",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = com.example.ui.theme.BumblebeeYellowBright
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Target $selectedBranch Examination • Practice Series",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
                         )
                     }
 
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
-                            .background(com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.18f))
-                            .border(1.dp, com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.4f), CircleShape),
+                            .background(Color.White.copy(alpha = 0.12f))
+                            .border(1.2.dp, com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.6f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        com.example.ui.components.BumblebeeFaceLogo(
-                            size = 28.dp,
-                            tint = com.example.ui.theme.BumblebeeYellowBright,
-                            animatedOptics = true
+                        com.example.ui.components.LiquidMorphingLogo(
+                            size = 38.dp,
+                            primaryColor = com.example.ui.theme.BumblebeeYellowBright,
+                            secondaryColor = com.example.ui.theme.EnergonBlueBright,
+                            accentColor = com.example.ui.theme.LiquidCoralNeon
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White.copy(alpha = 0.15f))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
                         .padding(vertical = 12.dp, horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
@@ -851,33 +625,11 @@ fun ExamGridCardItem(
                 .padding(10.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .background(
-                        when {
-                            branch.category.equals("Medical", true) -> Color(0xFF10B981).copy(alpha = 0.18f)
-                            branch.id.contains("adv") -> Color(0xFFEF4444).copy(alpha = 0.18f)
-                            branch.id.contains("iiser") || branch.id.contains("niser") -> Color(0xFF8B5CF6).copy(alpha = 0.18f)
-                            else -> Color(0xFFF59E0B).copy(alpha = 0.18f)
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = when {
-                        branch.category.equals("Medical", true) -> "🩺"
-                        branch.id.contains("adv") -> "⚙️"
-                        branch.id.contains("iiser") || branch.id.contains("niser") -> "🔬"
-                        branch.id.contains("bitsat") -> "🏛️"
-                        branch.id.contains("kvpy") -> "🌟"
-                        branch.id.contains("nda") -> "🛡️"
-                        else -> "🎯"
-                    },
-                    fontSize = 16.sp
-                )
-            }
+            com.example.ui.components.ExamOfficialLogo(
+                branch = branch,
+                size = 36.dp,
+                shapeCorner = 10.dp
+            )
             Column {
                 Text(
                     text = branch.displayName.ifBlank { branch.name },
@@ -893,6 +645,80 @@ fun ExamGridCardItem(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ExamListCardItem(
+    branch: ExamBranch,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
+            .clickable { onClick() }
+            .testTag("exam_list_card_${branch.id}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                com.example.ui.components.ExamOfficialLogo(
+                    branch = branch,
+                    size = 46.dp,
+                    shapeCorner = 12.dp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = branch.displayName.ifBlank { branch.name },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "PYQ Papers • ${branch.yearsRange.ifBlank { "2026 - 2012" }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (branch.category.equals("Medical", true)) MarksSuccess.copy(alpha = 0.12f) else MarksPrimary.copy(alpha = 0.12f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Open Chapters",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (branch.category.equals("Medical", true)) MarksSuccess else MarksPrimary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = if (branch.category.equals("Medical", true)) MarksSuccess else MarksPrimary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }

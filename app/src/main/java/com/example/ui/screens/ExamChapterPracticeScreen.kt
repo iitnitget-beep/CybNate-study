@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -86,96 +87,101 @@ fun ExamChapterPracticeScreen(
     )
     val currentSubjectName = subjectMapping[selectedTab] ?: selectedTab
 
-    Scaffold(
-        topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                MarksTopAppBar(
-                    title = examTitle,
-                    onBackClick = onBackClick,
-                    actions = {
-                        com.example.ui.components.ThemeToggleIconButton()
-                        IconButton(onClick = { /* Search toggle */ }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurface)
-                        }
-                        IconButton(onClick = { /* Menu */ }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-                )
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
-                // Top Navigation Tabs (Home | Bio/Phy | Chem | Math/Analysis)
-                ScrollableTabRow(
-                    selectedTabIndex = availableTabs.indexOf(selectedTab).coerceAtLeast(0),
-                    edgePadding = 16.dp,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MarksPrimary
-                ) {
-                    availableTabs.forEach { tab ->
-                        Tab(
-                            selected = selectedTab.equals(tab, true),
-                            onClick = {
-                                if (tab == "Home") {
-                                    onBackClick()
-                                } else {
-                                    selectedTab = tab
-                                }
-                            },
-                            text = {
-                                Text(
-                                    text = tab,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
-                                )
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.NEON_VIBE,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    MarksTopAppBar(
+                        title = examTitle,
+                        onBackClick = onBackClick,
+                        actions = {
+                            IconButton(onClick = { /* Search toggle */ }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurface)
                             }
-                        )
+                            IconButton(onClick = { /* Menu */ }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onSurface)
+                            }
+                        }
+                    )
+
+                    // Top Navigation Tabs (Home | Bio/Phy | Chem | Math/Analysis)
+                    ScrollableTabRow(
+                        selectedTabIndex = availableTabs.indexOf(selectedTab).coerceAtLeast(0),
+                        edgePadding = 16.dp,
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        availableTabs.forEach { tab ->
+                            Tab(
+                                selected = selectedTab.equals(tab, true),
+                                onClick = {
+                                    if (tab == "Home") {
+                                        onBackClick()
+                                    } else {
+                                        selectedTab = tab
+                                    }
+                                },
+                                text = {
+                                    Text(
+                                        text = tab,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
-            }
-        },
-        bottomBar = {
-            // Bottom Action Bar: Go Home | Subject Bookmarks | Subject Analysis
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
+            },
+            bottomBar = {
+                // Bottom Liquid Glass Action Bar
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp
                 ) {
-                    TextButton(onClick = onBackClick) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Home, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
-                            Text("Go Home", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = onBackClick) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Home, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
+                                Text("Go Home", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
-                    }
 
-                    TextButton(onClick = { onOpenBookmarks(currentSubjectName) }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Bookmark, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
-                            Text("$selectedTab Bookmarks", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        TextButton(onClick = { onOpenBookmarks(currentSubjectName) }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Bookmark, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
+                                Text("$selectedTab Bookmarks", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
-                    }
 
-                    TextButton(onClick = { selectedTab = "Analysis" }) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.BarChart, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
-                            Text("$selectedTab Analysis", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        TextButton(onClick = { selectedTab = "Analysis" }) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.BarChart, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(22.dp))
+                                Text("$selectedTab Analysis", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
                     }
                 }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
             // Filter Chips Row (Class, Units, Not Started, Weak Chapter)
             LazyRow(
                 modifier = Modifier
@@ -347,6 +353,7 @@ fun ExamChapterPracticeScreen(
             }
         }
     }
+}
 
     // Topic and Difficulty Selection Bottom Sheet / Dialog
     if (selectedChapterForPractice != null) {
@@ -439,13 +446,14 @@ private fun ChapterPracticeCard(
     test: Test,
     onClick: () -> Unit
 ) {
-    Card(
+    com.example.ui.components.LiquidGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        cornerRadius = 18.dp,
+        tintColor = MaterialTheme.colorScheme.surface,
+        frostAlpha = 0.65f,
+        borderGlowColor = Color.White.copy(alpha = 0.18f)
     ) {
         Row(
             modifier = Modifier
@@ -456,16 +464,17 @@ private fun ChapterPracticeCard(
             // Icon box
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MarksPrimary.copy(alpha = 0.12f)),
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = null,
-                    tint = MarksPrimary,
-                    modifier = Modifier.size(24.dp)
+                com.example.ui.components.LiquidMorphingLogo(
+                    size = 32.dp,
+                    primaryColor = com.example.ui.theme.LiquidVioletNeon,
+                    secondaryColor = com.example.ui.theme.LiquidCyanNeon,
+                    accentColor = com.example.ui.theme.LiquidGoldFluid
                 )
             }
 

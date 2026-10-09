@@ -47,6 +47,15 @@ val MarksWarning = Color(0xFFF59E0B)          // Amber Hazard Alert (Timer Warni
 val MarksPurple = Color(0xFFA855F7)           // Energon Violet (Marked for Review)
 val MarksNotVisited = Color(0xFF94A3B8)       // Steel Gray (Unvisited HUD)
 
+// Liquid Glass & Shader Gradient Chromatic Palette (liquid-logo / shadergradient / liquid-glass-js / react-three-fiber)
+val LiquidGlassWhite = Color(0x33FFFFFF)      // 20% Frost specular sheen
+val LiquidGlassBorder = Color(0x55FFFFFF)     // 33% Rim reflection highlight
+val LiquidGlassDark = Color(0x40121724)       // Deep iridescent frosted surface
+val LiquidCyanNeon = Color(0xFF00E5FF)        // High-specular refractive Cyan
+val LiquidVioletNeon = Color(0xFFA855F7)      // Translucent violet fluid tint
+val LiquidCoralNeon = Color(0xFFFF5E7E)       // Fluorescent coral chromatic accent
+val LiquidGoldFluid = Color(0xFFFFB800)       // Molten amber fluid highlight
+
 // Legacy compatibility aliases pointing directly to Bumblebee Cybertron palette
 val MarksPrimary = BumblebeeYellowDark        // High-contrast primary for accessible text
 val MarksPrimaryDark = BumblebeeYellowMuted

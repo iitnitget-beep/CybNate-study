@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,10 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
@@ -90,6 +94,7 @@ fun ProfileHistoryScreen(
 
     val attemptsState by viewModel.userAttemptsState.collectAsState()
     val bookmarksState by viewModel.userBookmarksState.collectAsState()
+    val targetStream by viewModel.targetStream.collectAsState()
 
     val session = remember { UserSessionManager.getSession(context) }
     val currentUser = Firebase.auth.currentUser
@@ -102,228 +107,325 @@ fun ProfileHistoryScreen(
            else currentUser?.phoneNumber ?: "Registered Student"
     val photoUrl = currentUser?.photoUrl?.toString()
 
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
     var showSignOutDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            MarksTopAppBar(
-                title = "My Profile & History",
-                onBackClick = onBackClick,
-                actions = {
-                    com.example.ui.components.ThemeToggleIconButton()
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
-                    IconButton(
-                        onClick = { showSignOutDialog = true },
-                        modifier = Modifier.testTag("sign_out_menu_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Sign Out",
-                            tint = MarksError
-                        )
-                    }
-                }
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Profile Header Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (!photoUrl.isNullOrBlank()) {
-                        AsyncImage(
-                            model = photoUrl,
-                            contentDescription = "Profile Photo",
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape)
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape)
-                                .background(MarksPrimary),
-                            contentAlignment = Alignment.Center
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.AUTO_PRESET,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                MarksTopAppBar(
+                    title = "My Profile",
+                    onBackClick = onBackClick,
+                    actions = {
+                        IconButton(
+                            onClick = { showSignOutDialog = true },
+                            modifier = Modifier.testTag("sign_out_menu_button")
                         ) {
-                            Text(
-                                text = userName.take(1).uppercase(),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Sign Out",
+                                tint = MarksError
                             )
                         }
                     }
+                )
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Profile Header Card with Liquid Glass
+                com.example.ui.components.LiquidGlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    cornerRadius = 24.dp,
+                    tintColor = MaterialTheme.colorScheme.surface,
+                    frostAlpha = 0.65f,
+                    borderGlowColor = Color.White.copy(alpha = 0.22f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (!photoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = photoUrl,
+                                contentDescription = "Profile Photo",
+                                modifier = Modifier
+                                    .size(58.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(58.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .border(1.2.dp, com.example.ui.theme.LiquidCyanNeon.copy(alpha = 0.5f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                com.example.ui.components.LiquidMorphingLogo(
+                                    size = 46.dp,
+                                    primaryColor = com.example.ui.theme.EnergonBlueBright,
+                                    secondaryColor = com.example.ui.theme.BumblebeeYellowBright,
+                                    accentColor = com.example.ui.theme.LiquidCoralNeon
+                                )
+                            }
+                        }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
 
-                    Column(modifier = Modifier.weight(1f)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = userName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = userEmail,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (targetStream.equals("Medical", true)) MarksSuccess.copy(alpha = 0.15f) else MarksPrimary.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = if (targetStream.equals("Medical", true)) "🩺 Medical Aspirant (NEET)" else "⚙️ Engineering Aspirant (JEE)",
+                                    color = if (targetStream.equals("Medical", true)) MarksSuccess else MarksPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Target Stream Preference Card (Engineering vs Medical)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = userName,
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Target Exam Stream",
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = userEmail,
+                            text = "Touch to set your primary goal:",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MarksPrimary.copy(alpha = 0.12f)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "JEE / NEET Aspirant",
-                                color = MarksPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            // Engineering Card
+                            val isEng = targetStream.equals("Engineering", true)
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .clickable { viewModel.setTargetStream("Engineering") }
+                                    .border(
+                                        width = if (isEng) 2.dp else 1.dp,
+                                        color = if (isEng) MarksPrimary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .testTag("stream_option_engineering"),
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (isEng) MarksPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = "⚙️", fontSize = 28.sp)
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "Engineering",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isEng) MarksPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "JEE Main, Adv, BITSAT",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    if (isEng) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MarksPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Active",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Medical Card
+                            val isMed = targetStream.equals("Medical", true)
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .clickable { viewModel.setTargetStream("Medical") }
+                                    .border(
+                                        width = if (isMed) 2.dp else 1.dp,
+                                        color = if (isMed) MarksSuccess else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .testTag("stream_option_medical"),
+                                shape = RoundedCornerShape(14.dp),
+                                color = if (isMed) MarksSuccess.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = "🩺", fontSize = 28.sp)
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "Medical",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isMed) MarksSuccess else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "NEET UG, AIIMS, JIPMER",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    if (isMed) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MarksSuccess,
+                                            modifier = Modifier.size(20.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Active",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Theme & Appearance Preferences Card (Featuring 5 Themes including Metallic Chrome)
+                com.example.ui.components.ThemeSettingsCard(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                // Sign Out Action Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Button(
+                            onClick = { showSignOutDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MarksError.copy(alpha = 0.15f), contentColor = MarksError),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sign Out of Account", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-            }
 
-            // Theme & Display Mode Preference Card
-            com.example.ui.components.ThemeSettingsCard(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-            )
-
-            // Tabs: History vs Bookmarks
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MarksPrimary
-            ) {
-                Tab(
-                    selected = selectedTabIndex == 0,
-                    onClick = { selectedTabIndex = 0 },
-                    text = {
-                        val count = (attemptsState as? UiState.Success)?.data?.size ?: 0
-                        Text("Attempts ($count)", fontWeight = FontWeight.Bold)
-                    }
-                )
-                Tab(
-                    selected = selectedTabIndex == 1,
-                    onClick = { selectedTabIndex = 1 },
-                    text = {
-                        val count = (bookmarksState as? UiState.Success)?.data?.size ?: 0
-                        Text("Bookmarks ($count)", fontWeight = FontWeight.Bold)
-                    }
-                )
-            }
-
-            // Tab Content
-            when (selectedTabIndex) {
-                0 -> {
-                    // Attempts History
-                    when (val state = attemptsState) {
-                        is UiState.Loading -> LoadingSkeleton("Loading past attempts...")
-                        is UiState.Error -> EmptyView("Error", state.message)
-                        is UiState.Success -> {
-                            val attempts = state.data
-                            if (attempts.isEmpty()) {
-                                EmptyView(
-                                    title = "No test attempts yet",
-                                    description = "Start taking chapter-wise mock tests to track your scores and rank progression.",
-                                    icon = Icons.Default.History
-                                )
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    items(attempts) { attempt ->
-                                        AttemptHistoryItem(
-                                            attempt = attempt,
-                                            onClick = { onAttemptClick(attempt) }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                1 -> {
-                    // Bookmarks List
-                    when (val state = bookmarksState) {
-                        is UiState.Loading -> LoadingSkeleton("Loading saved questions...")
-                        is UiState.Error -> EmptyView("Error", state.message)
-                        is UiState.Success -> {
-                            val bookmarks = state.data
-                            if (bookmarks.isEmpty()) {
-                                EmptyView(
-                                    title = "No bookmarked questions",
-                                    description = "Bookmark tricky questions during tests or review to revise them here anytime.",
-                                    icon = Icons.Default.Bookmark
-                                )
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    items(bookmarks) { bookmark ->
-                                        BookmarkItemCard(bookmark = bookmark)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
-    }
 
-    if (showSignOutDialog) {
-        AlertDialog(
-            onDismissRequest = { showSignOutDialog = false },
-            title = { Text("Sign Out") },
-            text = { Text("Are you sure you want to sign out of your Marks account?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showSignOutDialog = false
-                        UserSessionManager.clearSession(context)
-                        AuthManager.signOut(
-                            context = context,
-                            credentialManager = credentialManager,
-                            onSignOutComplete = onSignOutComplete,
-                            scope = coroutineScope
-                        )
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MarksError)
-                ) {
-                    Text("Sign Out")
+        if (showSignOutDialog) {
+            AlertDialog(
+                onDismissRequest = { showSignOutDialog = false },
+                title = { Text("Sign Out") },
+                text = { Text("Are you sure you want to sign out of your CybNate account?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showSignOutDialog = false
+                            UserSessionManager.clearSession(context)
+                            AuthManager.signOut(
+                                context = context,
+                                credentialManager = credentialManager,
+                                onSignOutComplete = onSignOutComplete,
+                                scope = coroutineScope
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MarksError)
+                    ) {
+                        Text("Sign Out")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showSignOutDialog = false }) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSignOutDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -332,13 +434,14 @@ private fun AttemptHistoryItem(
     attempt: Attempt,
     onClick: () -> Unit
 ) {
-    Card(
+    com.example.ui.components.LiquidGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        cornerRadius = 18.dp,
+        tintColor = MaterialTheme.colorScheme.surface,
+        frostAlpha = 0.65f,
+        borderGlowColor = Color.White.copy(alpha = 0.18f)
     ) {
         Column(
             modifier = Modifier
@@ -427,11 +530,12 @@ private fun AttemptHistoryItem(
 
 @Composable
 private fun BookmarkItemCard(bookmark: Bookmark) {
-    Card(
+    com.example.ui.components.LiquidGlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        cornerRadius = 16.dp,
+        tintColor = MaterialTheme.colorScheme.surface,
+        frostAlpha = 0.65f,
+        borderGlowColor = Color.White.copy(alpha = 0.18f)
     ) {
         Row(
             modifier = Modifier

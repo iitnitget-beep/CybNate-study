@@ -7,7 +7,7 @@ import android.content.SharedPreferences
  * Manages login attempts and enforces a 24-hour lockout if 5 consecutive failed attempts occur.
  */
 object LoginLockoutManager {
-    private const val PREFS_NAME = "marks_auth_lockout_prefs"
+    private const val PREFS_NAME = "cybnate_auth_lockout_prefs"
     private const val KEY_FAILED_ATTEMPTS = "failed_attempts_count"
     private const val KEY_LOCKOUT_TIMESTAMP = "lockout_timestamp_ms"
     private const val MAX_ATTEMPTS = 5

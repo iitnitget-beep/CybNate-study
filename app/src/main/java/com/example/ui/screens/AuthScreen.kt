@@ -166,88 +166,82 @@ fun AuthScreen(
         )
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Hero Top Section (Cybertron Bumblebee Command Center)
-            Box(
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.CYBER_LIQUID,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF0A0C10),
-                                Color(0xFF1E1700),
-                                Color(0xFF2E2200)
-                            )
-                        )
-                    )
-                    .padding(horizontal = 24.dp, vertical = 24.dp)
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Cybertron scanning grid
-                com.example.ui.components.CybertronScanningGrid(
-                    gridColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.08f),
-                    scanLineColor = com.example.ui.theme.EnergonBlueBright.copy(alpha = 0.35f)
-                )
-
-                // Theme toggle button at top-end
-                Box(
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    com.example.ui.components.ThemeToggleIconButton()
-                }
-
-                Column(
+                // Hero Top Section (Liquid Glass Command Center)
+                com.example.ui.components.LiquidGlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    cornerRadius = 28.dp,
+                    tintColor = MaterialTheme.colorScheme.surface,
+                    frostAlpha = 0.65f,
+                    borderGlowColor = com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.45f)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(76.dp)
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(com.example.ui.theme.BumblebeeYellow.copy(alpha = 0.15f))
-                            .border(1.5.dp, com.example.ui.theme.BumblebeeYellow, RoundedCornerShape(22.dp)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 20.dp)
                     ) {
-                        BumblebeeFaceLogo(
-                            size = 54.dp,
-                            tint = com.example.ui.theme.BumblebeeYellowBright,
-                            animatedOptics = true
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .border(1.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(24.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                com.example.ui.components.LiquidMorphingLogo(
+                                    size = 64.dp,
+                                    primaryColor = com.example.ui.theme.BumblebeeYellowBright,
+                                    secondaryColor = com.example.ui.theme.EnergonBlueBright,
+                                    accentColor = com.example.ui.theme.LiquidCoralNeon
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            Text(
+                                text = "CybNate",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "Real Exam Test Series & Chapter-wise Analytics",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "CybNate",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = com.example.ui.theme.BumblebeeYellowBright
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Real Exam Test Series & Chapter-wise Analytics",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.9f),
-                        textAlign = TextAlign.Center
-                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
             // Lockout Banner if user exceeded 5 attempts
             if (isLockedOut) {
@@ -644,25 +638,51 @@ fun AuthScreen(
                                 )
                             } else if (isAlphabetOrEmail) {
                                 isLoading = true
-                                AuthManager.signInWithGoogle(
-                                    context = context,
-                                    credentialManager = credentialManager,
-                                    onAuthSuccess = { displayName ->
-                                        isLoading = false
-                                        LoginLockoutManager.resetAttempts(context)
-                                        onGoogleAuthSuccess(displayName)
-                                    },
-                                    onAuthError = { err ->
-                                        isLoading = false
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(err)
-                                        }
-                                    },
-                                    scope = coroutineScope,
-                                    onAuthCancelled = {
-                                        isLoading = false
+                                if (authModeTab == 0) {
+                                    // Sign In
+                                    AuthManager.signInWithEmail(
+                                        context = context,
+                                        identifier = identifierInput.trim(),
+                                        password = passwordInput,
+                                        onSuccess = { displayName ->
+                                            isLoading = false
+                                            LoginLockoutManager.resetAttempts(context)
+                                            onGoogleAuthSuccess(displayName)
+                                        },
+                                        onError = { err ->
+                                            isLoading = false
+                                            refreshLockout()
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(err)
+                                            }
+                                        },
+                                        scope = coroutineScope
+                                    )
+                                } else {
+                                    // Create Account
+                                    val finalDisplayName = nameInput.trim().ifBlank {
+                                        identifierInput.trim().substringBefore("@")
                                     }
-                                )
+                                    AuthManager.signUpWithEmail(
+                                        context = context,
+                                        identifier = identifierInput.trim(),
+                                        password = passwordInput,
+                                        displayName = finalDisplayName,
+                                        onSuccess = { displayName ->
+                                            isLoading = false
+                                            LoginLockoutManager.resetAttempts(context)
+                                            onGoogleAuthSuccess(displayName)
+                                        },
+                                        onError = { err ->
+                                            isLoading = false
+                                            refreshLockout()
+                                            coroutineScope.launch {
+                                                snackbarHostState.showSnackbar(err)
+                                            }
+                                        },
+                                        scope = coroutineScope
+                                    )
+                                }
                             }
                         },
                         enabled = canSubmit && !isLoading,
@@ -832,6 +852,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable

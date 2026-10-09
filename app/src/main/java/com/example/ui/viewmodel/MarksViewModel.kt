@@ -12,6 +12,7 @@ import com.example.data.model.Question
 import com.example.data.model.QuestionPaletteStatus
 import com.example.data.model.Test
 import com.example.data.repository.MarksRepository
+import com.example.util.UserSessionManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.Job
@@ -63,7 +64,14 @@ class MarksViewModel(application: Application) : AndroidViewModel(application) {
             )
         )
 
-    private val _selectedExamBranch = MutableStateFlow<String>("JEE")
+    private val _targetStream = MutableStateFlow<String>(
+        UserSessionManager.getTargetStream(application)
+    )
+    val targetStream: StateFlow<String> = _targetStream.asStateFlow()
+
+    private val _selectedExamBranch = MutableStateFlow<String>(
+        if (UserSessionManager.getTargetStream(application).equals("Medical", ignoreCase = true)) "NEET" else "JEE Main"
+    )
     val selectedExamBranch: StateFlow<String> = _selectedExamBranch.asStateFlow()
 
     private val _selectedCategoryId = MutableStateFlow<String?>(null)
@@ -109,6 +117,13 @@ class MarksViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onUserAuthenticated() {
         // Real-time online user session synced
+    }
+
+    fun setTargetStream(stream: String) {
+        _targetStream.value = stream
+        UserSessionManager.setTargetStream(getApplication(), stream)
+        val defaultBranch = if (stream.equals("Medical", ignoreCase = true)) "NEET" else "JEE Main"
+        selectExamBranch(defaultBranch)
     }
 
     fun selectExamBranch(branchName: String) {

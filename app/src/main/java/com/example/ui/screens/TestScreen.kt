@@ -197,9 +197,15 @@ fun TestScreen(
         else -> MarksPrimary
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.SUNSET_GLASS,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
                 title = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -657,6 +663,7 @@ fun TestScreen(
         )
     }
 }
+}
 
 @Composable
 private fun OptionItem(
@@ -667,21 +674,20 @@ private fun OptionItem(
     onSelect: () -> Unit,
     onImageClick: (() -> Unit)? = null
 ) {
-    val borderColor = if (isSelected) MarksPrimary else Slate200
-    val bgColor = if (isSelected) MarksPrimary.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+    val borderColor = if (isSelected) MarksPrimary else Color.White.copy(alpha = 0.2f)
+    val bgColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface
 
-    Card(
+    com.example.ui.components.LiquidGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onSelect() }
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(14.dp)
+            .then(
+                if (isSelected) Modifier.border(2.dp, MarksPrimary, RoundedCornerShape(16.dp)) else Modifier
             ),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = bgColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp)
+        cornerRadius = 16.dp,
+        tintColor = bgColor,
+        frostAlpha = if (isSelected) 0.75f else 0.55f,
+        borderGlowColor = borderColor
     ) {
         Row(
             modifier = Modifier

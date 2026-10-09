@@ -143,36 +143,42 @@ fun PracticeScreen(
     val topicSubtitle = activeSession?.selectedTopic?.let { " • $it" } ?: ""
     val diffSubtitle = activeSession?.selectedDifficulty?.let { " • $it" } ?: ""
 
-    Scaffold(
-        topBar = {
-            MarksTopAppBar(
-                title = test.chapter.ifBlank { test.title },
-                subtitle = "Practice Mode • Q ${currentIndex + 1} of ${questions.size}$diffSubtitle$topicSubtitle",
-                onBackClick = { showSubmitConfirm = true },
-                actions = {
-                    // Time spent on current question badge
-                    val mins = currentQuestionSeconds / 60
-                    val secs = currentQuestionSeconds % 60
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MarksPrimary.copy(alpha = 0.12f),
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Timer, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = String.format("%dm %ds", mins, secs), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MarksPrimary)
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.NEON_VIBE,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                MarksTopAppBar(
+                    title = test.chapter.ifBlank { test.title },
+                    subtitle = "Practice Mode • Q ${currentIndex + 1} of ${questions.size}$diffSubtitle$topicSubtitle",
+                    onBackClick = { showSubmitConfirm = true },
+                    actions = {
+                        // Time spent on current question badge
+                        val mins = currentQuestionSeconds / 60
+                        val secs = currentQuestionSeconds % 60
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MarksPrimary.copy(alpha = 0.12f),
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Timer, contentDescription = null, tint = MarksPrimary, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(text = String.format("%dm %ds", mins, secs), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MarksPrimary)
+                            }
                         }
                     }
-                }
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp
-            ) {
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp
+                ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -472,4 +478,5 @@ fun PracticeScreen(
             onDismiss = { zoomedImageUrl = null }
         )
     }
+}
 }

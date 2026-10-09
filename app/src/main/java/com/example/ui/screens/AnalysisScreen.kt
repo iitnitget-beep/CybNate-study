@@ -52,8 +52,14 @@ fun AnalysisScreen(
 
     val weekRanges = remember { getPast4WeekRanges() }
 
-    Scaffold(
-        topBar = {
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.AURORA_CALM,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 MarksTopAppBar(
                     title = examTitle,
@@ -237,6 +243,7 @@ fun AnalysisScreen(
             }
         }
     }
+}
 }
 
 @Composable

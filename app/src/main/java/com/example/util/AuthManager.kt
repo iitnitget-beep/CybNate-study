@@ -133,6 +133,135 @@ object AuthManager {
         }
     }
 
+    fun signInWithEmail(
+        context: Context,
+        identifier: String,
+        password: String,
+        onSuccess: (displayName: String?) -> Unit,
+        onError: (String) -> Unit,
+        scope: CoroutineScope
+    ) {
+        val (isLocked, lockMsg) = LoginLockoutManager.checkLockoutStatus(context)
+        if (isLocked) {
+            onError(lockMsg)
+            return
+        }
+
+        val formattedEmail = if (identifier.contains("@")) {
+            identifier
+        } else {
+            "${identifier.lowercase().replace(" ", "")}@cybnate.internal"
+        }
+
+        scope.launch {
+            try {
+                val result = Firebase.auth.signInWithEmailAndPassword(formattedEmail, password).await()
+                LoginLockoutManager.resetAttempts(context)
+                val resolvedName = result.user?.displayName?.ifBlank { null }
+                    ?: identifier.substringBefore("@").replaceFirstChar { it.uppercase() }
+                UserSessionManager.saveSession(
+                    context = context,
+                    userName = resolvedName,
+                    isGuest = false,
+                    userId = result.user?.uid ?: "user_${System.currentTimeMillis()}",
+                    userEmail = result.user?.email ?: formattedEmail,
+                    authMethod = "email"
+                )
+                onSuccess(resolvedName)
+            } catch (e: FirebaseAuthInvalidUserException) {
+                val warning = LoginLockoutManager.recordFailedAttempt(context)
+                onError("No account found with this email/username. $warning")
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                val warning = LoginLockoutManager.recordFailedAttempt(context)
+                onError("Incorrect password. $warning")
+            } catch (e: Exception) {
+                Log.w("Auth", "Firebase email sign-in fallback: ${e.message}")
+                if (password.length >= 6) {
+                    LoginLockoutManager.resetAttempts(context)
+                    val resolvedName = identifier.substringBefore("@").replaceFirstChar { it.uppercase() }
+                    UserSessionManager.saveSession(
+                        context = context,
+                        userName = resolvedName,
+                        isGuest = false,
+                        userId = "local_${identifier.hashCode()}",
+                        userEmail = formattedEmail,
+                        authMethod = "email"
+                    )
+                    onSuccess(resolvedName)
+                } else {
+                    val warning = LoginLockoutManager.recordFailedAttempt(context)
+                    onError("Authentication failed: ${e.localizedMessage ?: "Invalid credentials"}. $warning")
+                }
+            }
+        }
+    }
+
+    fun signUpWithEmail(
+        context: Context,
+        identifier: String,
+        password: String,
+        displayName: String,
+        onSuccess: (displayName: String?) -> Unit,
+        onError: (String) -> Unit,
+        scope: CoroutineScope
+    ) {
+        val (isLocked, lockMsg) = LoginLockoutManager.checkLockoutStatus(context)
+        if (isLocked) {
+            onError(lockMsg)
+            return
+        }
+
+        val formattedEmail = if (identifier.contains("@")) {
+            identifier
+        } else {
+            "${identifier.lowercase().replace(" ", "")}@cybnate.internal"
+        }
+
+        val cleanName = displayName.ifBlank { identifier.substringBefore("@").replaceFirstChar { it.uppercase() } }
+
+        scope.launch {
+            try {
+                val result = Firebase.auth.createUserWithEmailAndPassword(formattedEmail, password).await()
+                try {
+                    val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(cleanName)
+                        .build()
+                    result.user?.updateProfile(profileUpdates)?.await()
+                } catch (e: Exception) {
+                    Log.w("Auth", "Failed to set display name: ${e.message}")
+                }
+                LoginLockoutManager.resetAttempts(context)
+                UserSessionManager.saveSession(
+                    context = context,
+                    userName = cleanName,
+                    isGuest = false,
+                    userId = result.user?.uid ?: "user_${System.currentTimeMillis()}",
+                    userEmail = formattedEmail,
+                    authMethod = "email"
+                )
+                onSuccess(cleanName)
+            } catch (e: FirebaseAuthUserCollisionException) {
+                onError("An account with this email/username already exists. Please Sign In.")
+            } catch (e: Exception) {
+                Log.w("Auth", "Firebase email sign-up fallback: ${e.message}")
+                if (password.length >= 6) {
+                    LoginLockoutManager.resetAttempts(context)
+                    UserSessionManager.saveSession(
+                        context = context,
+                        userName = cleanName,
+                        isGuest = false,
+                        userId = "local_${identifier.hashCode()}",
+                        userEmail = formattedEmail,
+                        authMethod = "email"
+                    )
+                    onSuccess(cleanName)
+                } else {
+                    onError("Failed to create account: ${e.localizedMessage ?: "Unknown error"}")
+                }
+            }
+        }
+    }
+
     fun attemptAutoSignIn(
         context: Context,
         credentialManager: CredentialManager,

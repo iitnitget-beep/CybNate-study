@@ -66,74 +66,80 @@ fun TestInstructionsScreen(
 ) {
     var agreedToTerms by remember { mutableStateOf(true) }
 
-    Scaffold(
-        topBar = {
-            MarksTopAppBar(
-                title = "Practice Set Instructions",
-                subtitle = test.title,
-                onBackClick = onBackClick
-            )
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                shadowElevation = 8.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    ) {
-                        Checkbox(
-                            checked = agreedToTerms,
-                            onCheckedChange = { agreedToTerms = it },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = MarksPrimary
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "I have read and understood all the practice instructions and marking scheme.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
 
-                    Button(
-                        onClick = onStartTest,
-                        enabled = agreedToTerms,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MarksPrimary,
-                            contentColor = Color.White
-                        ),
+    com.example.ui.components.LiquidShaderBackground(
+        variant = com.example.ui.components.LiquidThemeVariant.SUNSET_GLASS,
+        isDarkTheme = isDark
+    ) {
+        Scaffold(
+            topBar = {
+                MarksTopAppBar(
+                    title = "Practice Set Instructions",
+                    subtitle = test.title,
+                    onBackClick = onBackClick
+                )
+            },
+            bottomBar = {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(50.dp)
-                            .testTag("start_test_button")
+                            .padding(16.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Start Practice Now",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Checkbox(
+                                checked = agreedToTerms,
+                                onCheckedChange = { agreedToTerms = it },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = MarksPrimary
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "I have read and understood all the practice instructions and marking scheme.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Button(
+                            onClick = onStartTest,
+                            enabled = agreedToTerms,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MarksPrimary,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("start_test_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Start Practice Now",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -309,6 +315,7 @@ fun TestInstructionsScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
 }
 
 @Composable
