@@ -73,6 +73,7 @@ import com.example.ui.theme.MarksWarning
 import com.example.ui.viewmodel.MarksViewModel
 import com.example.ui.viewmodel.UiState
 import com.example.util.AuthManager
+import com.example.util.UserSessionManager
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -90,9 +91,15 @@ fun ProfileHistoryScreen(
     val attemptsState by viewModel.userAttemptsState.collectAsState()
     val bookmarksState by viewModel.userBookmarksState.collectAsState()
 
+    val session = remember { UserSessionManager.getSession(context) }
     val currentUser = Firebase.auth.currentUser
-    val userName = currentUser?.displayName ?: "Aspirant"
-    val userEmail = currentUser?.email ?: "Google Account"
+    val userName = currentUser?.displayName?.ifBlank { null }
+        ?: session.userName.ifBlank { null }
+        ?: if (session.isGuest) "Guest Aspirant" else "Aspirant"
+    val userEmail = currentUser?.email?.ifBlank { null }
+        ?: if (session.isGuest) "Guest Mode (Local Progress Saved)"
+           else if (session.userEmail.isNotBlank()) session.userEmail
+           else currentUser?.phoneNumber ?: "Registered Student"
     val photoUrl = currentUser?.photoUrl?.toString()
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -298,6 +305,7 @@ fun ProfileHistoryScreen(
                 Button(
                     onClick = {
                         showSignOutDialog = false
+                        UserSessionManager.clearSession(context)
                         AuthManager.signOut(
                             context = context,
                             credentialManager = credentialManager,

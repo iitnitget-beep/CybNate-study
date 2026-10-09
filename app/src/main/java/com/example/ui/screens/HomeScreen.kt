@@ -91,7 +91,8 @@ fun HomeScreen(
     googleUserName: String? = null,
     onTestClick: (Test) -> Unit,
     onAttemptReviewClick: (Attempt) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onScienceSkillsClick: () -> Unit = {}
 ) {
     val examBranches by viewModel.examBranchesState.collectAsState()
     val selectedBranch by viewModel.selectedExamBranch.collectAsState()
@@ -194,6 +195,80 @@ fun HomeScreen(
                     selectedBranch = selectedBranch,
                     attempts = (attemptsState as? UiState.Success)?.data ?: emptyList()
                 )
+            }
+
+            // Science Skills Hub Banner
+            item {
+                Spacer(modifier = Modifier.height(14.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clickable { onScienceSkillsClick() }
+                        .testTag("science_skills_hub_banner"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MarksPrimary.copy(alpha = 0.35f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MarksPrimary.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🧪", fontSize = 22.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Science Skills Hub",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MarksSuccess.copy(alpha = 0.2f)
+                                    ) {
+                                        Text(
+                                            text = "NEW",
+                                            color = MarksSuccess,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "Virtual Vernier, Screw Gauge, Salt Analysis & Lab PYQs",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Open Science Skills",
+                            tint = MarksPrimary
+                        )
+                    }
+                }
             }
 
             // 2. EXAM BRANCHES SECTION (Engineering and Medical Chapter-wise PYQs)

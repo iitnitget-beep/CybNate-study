@@ -10,6 +10,8 @@ import com.example.data.model.ExamBranch
 import com.example.data.model.Question
 import com.example.data.model.Test
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FieldPath
@@ -23,9 +25,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.Date
 import java.util.UUID
 
-class MarksRepository(private val db: FirebaseFirestore) {
+class MarksRepository(private val db: FirebaseFirestore, private val appContext: Context? = null) {
 
     companion object {
         fun resolveFirestore(context: Context): FirebaseFirestore {
@@ -34,13 +39,138 @@ class MarksRepository(private val db: FirebaseFirestore) {
         }
     }
 
-    constructor(context: Context) : this(resolveFirestore(context))
+    constructor(context: Context) : this(resolveFirestore(context), context.applicationContext)
 
     private val auth = Firebase.auth
 
-    // In-memory store for guest mode attempts and bookmarks
-    private val guestAttempts = MutableStateFlow<List<Attempt>>(emptyList())
-    private val guestBookmarks = MutableStateFlow<List<Bookmark>>(emptyList())
+    // Local store for guest mode attempts and bookmarks
+    private val guestAttempts = MutableStateFlow<List<Attempt>>(loadGuestAttemptsLocally())
+    private val guestBookmarks = MutableStateFlow<List<Bookmark>>(loadGuestBookmarksLocally())
+
+    private fun saveGuestAttemptsLocally(list: List<Attempt>) {
+        val ctx = appContext ?: return
+        try {
+            val jsonArray = JSONArray()
+            list.take(100).forEach { a ->
+                val obj = JSONObject()
+                obj.put("id", a.id)
+                obj.put("userId", a.userId)
+                obj.put("testId", a.testId)
+                obj.put("testTitle", a.testTitle)
+                obj.put("exam", a.exam)
+                obj.put("score", a.score)
+                obj.put("totalMarks", a.totalMarks)
+                obj.put("correctCount", a.correctCount)
+                obj.put("wrongCount", a.wrongCount)
+                obj.put("skippedCount", a.skippedCount)
+                obj.put("timeTakenSeconds", a.timeTakenSeconds)
+                obj.put("completed", a.completed)
+                obj.put("createdAt", a.createdAt?.toDate()?.time ?: System.currentTimeMillis())
+                val ansObj = JSONObject()
+                a.answers.forEach { (k, v) -> ansObj.put(k, v) }
+                obj.put("answers", ansObj)
+                jsonArray.put(obj)
+            }
+            ctx.getSharedPreferences("cybnate_guest_store", Context.MODE_PRIVATE)
+                .edit()
+                .putString("saved_guest_attempts", jsonArray.toString())
+                .apply()
+        } catch (e: Exception) {
+            Log.w("MarksRepo", "Failed to cache guest attempts", e)
+        }
+    }
+
+    private fun loadGuestAttemptsLocally(): List<Attempt> {
+        val ctx = appContext ?: return emptyList()
+        val str = ctx.getSharedPreferences("cybnate_guest_store", Context.MODE_PRIVATE)
+            .getString("saved_guest_attempts", null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(str)
+            val list = mutableListOf<Attempt>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                val answersMap = mutableMapOf<String, Int>()
+                val ansObj = obj.optJSONObject("answers")
+                if (ansObj != null) {
+                    val keys = ansObj.keys()
+                    while (keys.hasNext()) {
+                        val k = keys.next()
+                        answersMap[k] = ansObj.getInt(k)
+                    }
+                }
+                list.add(
+                    Attempt(
+                        id = obj.optString("id", ""),
+                        userId = obj.optString("userId", "guest"),
+                        testId = obj.optString("testId", ""),
+                        testTitle = obj.optString("testTitle", ""),
+                        exam = obj.optString("exam", ""),
+                        score = obj.optDouble("score", 0.0),
+                        totalMarks = obj.optDouble("totalMarks", 0.0),
+                        correctCount = obj.optInt("correctCount", 0),
+                        wrongCount = obj.optInt("wrongCount", 0),
+                        skippedCount = obj.optInt("skippedCount", 0),
+                        timeTakenSeconds = obj.optInt("timeTakenSeconds", 0),
+                        answers = answersMap,
+                        completed = obj.optBoolean("completed", true),
+                        createdAt = Timestamp(Date(obj.optLong("createdAt", System.currentTimeMillis())))
+                    )
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveGuestBookmarksLocally(list: List<Bookmark>) {
+        val ctx = appContext ?: return
+        try {
+            val jsonArray = JSONArray()
+            list.forEach { b ->
+                val obj = JSONObject()
+                obj.put("id", b.id)
+                obj.put("questionId", b.questionId)
+                obj.put("testId", b.testId)
+                obj.put("exam", b.exam)
+                obj.put("questionText", b.questionText)
+                obj.put("createdAt", b.createdAt?.toDate()?.time ?: System.currentTimeMillis())
+                jsonArray.put(obj)
+            }
+            ctx.getSharedPreferences("cybnate_guest_store", Context.MODE_PRIVATE)
+                .edit()
+                .putString("saved_guest_bookmarks", jsonArray.toString())
+                .apply()
+        } catch (e: Exception) {
+            Log.w("MarksRepo", "Failed to cache guest bookmarks", e)
+        }
+    }
+
+    private fun loadGuestBookmarksLocally(): List<Bookmark> {
+        val ctx = appContext ?: return emptyList()
+        val str = ctx.getSharedPreferences("cybnate_guest_store", Context.MODE_PRIVATE)
+            .getString("saved_guest_bookmarks", null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(str)
+            val list = mutableListOf<Bookmark>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    Bookmark(
+                        id = obj.optString("id", ""),
+                        questionId = obj.optString("questionId", ""),
+                        testId = obj.optString("testId", ""),
+                        exam = obj.optString("exam", ""),
+                        questionText = obj.optString("questionText", ""),
+                        createdAt = Timestamp(Date(obj.optLong("createdAt", System.currentTimeMillis())))
+                    )
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     private val imgRegex = Regex("""<img[^>]+src=["']([^"']+)["'][^>]*>""", RegexOption.IGNORE_CASE)
     private val htmlTagRegex = Regex("""<[^>]+>""")
@@ -1478,9 +1608,10 @@ class MarksRepository(private val db: FirebaseFirestore) {
             completed = true
         )
 
-        // Store in guest memory if unauthenticated
+        // Store in guest memory and local cache
         val updated = listOf(attempt) + guestAttempts.value
         guestAttempts.value = updated
+        saveGuestAttemptsLocally(updated)
 
         if (user != null) {
             try {
@@ -1508,12 +1639,12 @@ class MarksRepository(private val db: FirebaseFirestore) {
         return attemptId
     }
 
-    fun observeUserAttempts(): Flow<List<Attempt>> {
-        val user = auth.currentUser ?: return guestAttempts
+    fun observeUserAttempts(): Flow<List<Attempt>> = callbackFlow {
+        var firestoreListener: com.google.firebase.firestore.ListenerRegistration? = null
 
-        return callbackFlow {
-            trySend(guestAttempts.value)
-            val listener = db.collection("users").document(user.uid).collection("attempts")
+        fun attachListenerForUser(uid: String) {
+            firestoreListener?.remove()
+            firestoreListener = db.collection("users").document(uid).collection("attempts")
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
@@ -1525,17 +1656,38 @@ class MarksRepository(private val db: FirebaseFirestore) {
                     } ?: emptyList()
                     trySend(remote.ifEmpty { guestAttempts.value })
                 }
+        }
 
-            awaitClose { listener.remove() }
+        val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val u = firebaseAuth.currentUser
+            if (u != null) {
+                attachListenerForUser(u.uid)
+            } else {
+                firestoreListener?.remove()
+                trySend(guestAttempts.value)
+            }
+        }
+
+        auth.addAuthStateListener(authListener)
+        val initialUser = auth.currentUser
+        if (initialUser != null) {
+            attachListenerForUser(initialUser.uid)
+        } else {
+            trySend(guestAttempts.value)
+        }
+
+        awaitClose {
+            auth.removeAuthStateListener(authListener)
+            firestoreListener?.remove()
         }
     }
 
-    fun observeUserBookmarks(): Flow<List<Bookmark>> {
-        val user = auth.currentUser ?: return guestBookmarks
+    fun observeUserBookmarks(): Flow<List<Bookmark>> = callbackFlow {
+        var firestoreListener: com.google.firebase.firestore.ListenerRegistration? = null
 
-        return callbackFlow {
-            trySend(guestBookmarks.value)
-            val listener = db.collection("users").document(user.uid).collection("bookmarks")
+        fun attachListenerForUser(uid: String) {
+            firestoreListener?.remove()
+            firestoreListener = db.collection("users").document(uid).collection("bookmarks")
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
@@ -1547,8 +1699,29 @@ class MarksRepository(private val db: FirebaseFirestore) {
                     } ?: emptyList()
                     trySend(remote.ifEmpty { guestBookmarks.value })
                 }
+        }
 
-            awaitClose { listener.remove() }
+        val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val u = firebaseAuth.currentUser
+            if (u != null) {
+                attachListenerForUser(u.uid)
+            } else {
+                firestoreListener?.remove()
+                trySend(guestBookmarks.value)
+            }
+        }
+
+        auth.addAuthStateListener(authListener)
+        val initialUser = auth.currentUser
+        if (initialUser != null) {
+            attachListenerForUser(initialUser.uid)
+        } else {
+            trySend(guestBookmarks.value)
+        }
+
+        awaitClose {
+            auth.removeAuthStateListener(authListener)
+            firestoreListener?.remove()
         }
     }
 
@@ -1566,6 +1739,7 @@ class MarksRepository(private val db: FirebaseFirestore) {
             isBookmarked = true
         }
         guestBookmarks.value = currentList
+        saveGuestBookmarksLocally(currentList)
 
         if (user != null) {
             try {

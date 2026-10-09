@@ -32,12 +32,14 @@ import com.example.ui.screens.PracticeScreen
 import com.example.ui.screens.ProfileHistoryScreen
 import com.example.ui.screens.ResultScreen
 import com.example.ui.screens.ReviewScreen
+import com.example.ui.screens.ScienceSkillsScreen
 import com.example.ui.screens.TestInstructionsScreen
 import com.example.ui.screens.TestScreen
 import com.example.ui.theme.MarksTheme
 import com.example.ui.viewmodel.MarksViewModel
 import com.example.util.AuthManager
 import com.example.util.LoginLockoutManager
+import com.example.util.UserSessionManager
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
@@ -57,7 +59,8 @@ enum class AppScreen {
     TEST_SCREEN,
     RESULT_SCREEN,
     REVIEW_SCREEN,
-    PROFILE_HISTORY
+    PROFILE_HISTORY,
+    SCIENCE_SKILLS
 }
 
 class MainActivity : ComponentActivity() {
@@ -120,14 +123,56 @@ fun MarksAppContent() {
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
 
+    val initialSession = remember { UserSessionManager.getSession(context) }
     var currentUser by remember { mutableStateOf(Firebase.auth.currentUser) }
-    var googleAccountUserName by remember { mutableStateOf<String?>(null) }
+    
+    // User is authenticated if Firebase Auth has a user OR UserSessionManager has a persistent session
+    var isUserLoggedIn by remember {
+        mutableStateOf(
+            currentUser != null || initialSession.isLoggedIn
+        )
+    }
 
-    val isAuthenticated = currentUser != null || googleAccountUserName != null
+    var googleAccountUserName by remember {
+        mutableStateOf<String?>(
+            when {
+                initialSession.isLoggedIn && initialSession.userName.isNotBlank() -> initialSession.userName
+                currentUser?.displayName?.isNotBlank() == true -> currentUser?.displayName
+                currentUser?.email?.isNotBlank() == true -> currentUser?.email
+                currentUser?.phoneNumber?.isNotBlank() == true -> currentUser?.phoneNumber
+                else -> null
+            }
+        )
+    }
 
     DisposableEffect(Unit) {
         val listener = FirebaseAuth.AuthStateListener { auth ->
-            currentUser = auth.currentUser
+            val user = auth.currentUser
+            currentUser = user
+            if (user != null) {
+                isUserLoggedIn = true
+                val resolvedName = user.displayName?.ifBlank { null }
+                    ?: user.email?.ifBlank { null }
+                    ?: user.phoneNumber?.ifBlank { null }
+                    ?: googleAccountUserName?.ifBlank { null }
+                    ?: "Aspirant"
+                googleAccountUserName = resolvedName
+                UserSessionManager.saveSession(
+                    context = context,
+                    userName = resolvedName,
+                    isGuest = false,
+                    userId = user.uid,
+                    userEmail = user.email ?: "",
+                    authMethod = if (!user.phoneNumber.isNullOrBlank()) "phone" else "google"
+                )
+            } else {
+                // If Firebase auth user became null, check if session is Guest mode
+                val session = UserSessionManager.getSession(context)
+                if (!session.isGuest && !session.isLoggedIn) {
+                    isUserLoggedIn = false
+                    googleAccountUserName = null
+                }
+            }
         }
         Firebase.auth.addAuthStateListener(listener)
         onDispose {
@@ -137,12 +182,24 @@ fun MarksAppContent() {
 
     // Attempt silent auto-sign in if not currently signed in
     LaunchedEffect(Unit) {
-        if (!isAuthenticated) {
+        if (!isUserLoggedIn) {
             AuthManager.attemptAutoSignIn(
                 context = context,
                 credentialManager = credentialManager,
                 onAuthSuccess = {
                     currentUser = Firebase.auth.currentUser
+                    isUserLoggedIn = true
+                    val user = Firebase.auth.currentUser
+                    val resolvedName = user?.displayName ?: user?.email ?: user?.phoneNumber ?: "Aspirant"
+                    googleAccountUserName = resolvedName
+                    UserSessionManager.saveSession(
+                        context = context,
+                        userName = resolvedName,
+                        isGuest = false,
+                        userId = user?.uid ?: "",
+                        userEmail = user?.email ?: "",
+                        authMethod = "google"
+                    )
                 },
                 onUnauthenticated = {
                     // Stay on login screen
@@ -152,11 +209,33 @@ fun MarksAppContent() {
         }
     }
 
-    if (!isAuthenticated) {
+    if (!isUserLoggedIn) {
         AuthScreen(
             onGoogleAuthSuccess = { displayName ->
-                currentUser = Firebase.auth.currentUser
-                googleAccountUserName = displayName ?: (Firebase.auth.currentUser?.email ?: Firebase.auth.currentUser?.phoneNumber ?: "User")
+                val user = Firebase.auth.currentUser
+                currentUser = user
+                val isGuest = displayName == "Guest Aspirant" || (user == null && displayName?.isNotBlank() == true)
+                val resolvedName = displayName?.ifBlank { null }
+                    ?: user?.displayName?.ifBlank { null }
+                    ?: user?.email?.ifBlank { null }
+                    ?: user?.phoneNumber?.ifBlank { null }
+                    ?: if (isGuest) "Guest Aspirant" else "Aspirant"
+
+                googleAccountUserName = resolvedName
+                isUserLoggedIn = true
+
+                UserSessionManager.saveSession(
+                    context = context,
+                    userName = resolvedName,
+                    isGuest = isGuest,
+                    userId = user?.uid ?: if (isGuest) "guest_${System.currentTimeMillis()}" else "user",
+                    userEmail = user?.email ?: "",
+                    authMethod = when {
+                        isGuest -> "guest"
+                        !user?.phoneNumber.isNullOrBlank() -> "phone"
+                        else -> "google"
+                    }
+                )
             }
         )
     } else {
@@ -210,6 +289,9 @@ fun MarksAppContent() {
                         },
                         onProfileClick = {
                             currentScreen = AppScreen.PROFILE_HISTORY
+                        },
+                        onScienceSkillsClick = {
+                            currentScreen = AppScreen.SCIENCE_SKILLS
                         }
                     )
                 }
@@ -390,8 +472,21 @@ fun MarksAppContent() {
                             }
                         },
                         onSignOutComplete = {
+                            UserSessionManager.clearSession(context)
                             currentUser = null
                             googleAccountUserName = null
+                            isUserLoggedIn = false
+                            currentScreen = AppScreen.HOME
+                        }
+                    )
+                }
+
+                AppScreen.SCIENCE_SKILLS -> {
+                    BackHandler {
+                        currentScreen = AppScreen.HOME
+                    }
+                    ScienceSkillsScreen(
+                        onBackClick = {
                             currentScreen = AppScreen.HOME
                         }
                     )

@@ -244,6 +244,7 @@ object AuthManager {
         onSignOutComplete: () -> Unit,
         scope: CoroutineScope
     ) {
+        UserSessionManager.clearSession(context)
         Firebase.auth.signOut()
         scope.launch {
             try {
