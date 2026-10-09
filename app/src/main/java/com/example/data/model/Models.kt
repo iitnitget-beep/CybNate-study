@@ -9,6 +9,8 @@ data class ExamBranch(
     val id: String = "",
     val name: String = "",
     val displayName: String = "",
+    val category: String = "Engineering",
+    val yearsRange: String = "",
     val icon: String = "quiz",
     val order: Int = 0,
     val description: String = ""
@@ -68,6 +70,8 @@ data class Question(
     val solutionImageUrl: String = "",
     val videoSolution: String = "",
     val year: String = "",
+    val shift: String = "",
+    val repetitionFrequency: String = "",
     val marks: Double = 4.0,
     val imageUrl: String = "",
     val imageUrls: List<String> = emptyList(),

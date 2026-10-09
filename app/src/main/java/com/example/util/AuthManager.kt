@@ -37,80 +37,6 @@ fun Context.findActivity(): Activity? = when (this) {
 
 object AuthManager {
 
-    fun signInWithEmail(
-        context: Context,
-        email: String,
-        password: String,
-        onSuccess: (displayName: String?) -> Unit,
-        onError: (String) -> Unit,
-        scope: CoroutineScope
-    ) {
-        val (isLocked, lockMsg) = LoginLockoutManager.checkLockoutStatus(context)
-        if (isLocked) {
-            onError(lockMsg)
-            return
-        }
-
-        scope.launch {
-            try {
-                val result = Firebase.auth.signInWithEmailAndPassword(email.trim(), password).await()
-                LoginLockoutManager.resetAttempts(context)
-                onSuccess(result.user?.displayName ?: result.user?.email ?: "User")
-            } catch (e: Exception) {
-                Log.e("Auth", "Email sign in failed", e)
-                val lockWarning = LoginLockoutManager.recordFailedAttempt(context)
-                val msg = when (e) {
-                    is FirebaseAuthInvalidUserException -> "Account does not exist. Please sign up first. $lockWarning"
-                    is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password. $lockWarning"
-                    else -> "${e.localizedMessage ?: "Login failed"}. $lockWarning"
-                }
-                onError(msg)
-            }
-        }
-    }
-
-    fun signUpWithEmail(
-        context: Context,
-        email: String,
-        password: String,
-        displayName: String,
-        onSuccess: (displayName: String?) -> Unit,
-        onError: (String) -> Unit,
-        scope: CoroutineScope
-    ) {
-        val (isLocked, lockMsg) = LoginLockoutManager.checkLockoutStatus(context)
-        if (isLocked) {
-            onError(lockMsg)
-            return
-        }
-
-        scope.launch {
-            try {
-                val result = Firebase.auth.createUserWithEmailAndPassword(email.trim(), password).await()
-                val user = result.user
-                if (user != null && displayName.isNotBlank()) {
-                    val profileUpdates = com.google.firebase.auth.userProfileChangeRequest {
-                        this.displayName = displayName.trim()
-                    }
-                    user.updateProfile(profileUpdates).await()
-                }
-                LoginLockoutManager.resetAttempts(context)
-                onSuccess(displayName.ifBlank { user?.email ?: "User" })
-            } catch (e: FirebaseAuthUserCollisionException) {
-                Log.e("Auth", "Email already registered", e)
-                onError("An account with this email already exists. Please Sign In.")
-            } catch (e: Exception) {
-                Log.e("Auth", "Email sign up failed", e)
-                val msg = if (e.localizedMessage?.contains("already in use", true) == true || e.message?.contains("already in use", true) == true) {
-                    "An account with this email already exists. Please Sign In."
-                } else {
-                    e.localizedMessage ?: "Sign up failed"
-                }
-                onError(msg)
-            }
-        }
-    }
-
     fun sendPhoneOtp(
         context: Context,
         phoneNumber: String,
@@ -269,8 +195,8 @@ object AuthManager {
             ""
         }
 
-        if (clientId.isBlank() || clientId.contains("aistudiomarksapplet2026")) {
-            onAuthError("Google Sign-In is not configured. Use Guest mode.")
+        if (clientId.isBlank()) {
+            onAuthError("Google Sign-In configuration missing: default_web_client_id not found")
             return
         }
 

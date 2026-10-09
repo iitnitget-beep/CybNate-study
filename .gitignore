@@ -20,5 +20,7 @@ debug.keystore
 tmp/
 sa.json
 *service-account*.json
+serviceAccountKey.json
+*credentials*.json
 *.jks
 *.keystore

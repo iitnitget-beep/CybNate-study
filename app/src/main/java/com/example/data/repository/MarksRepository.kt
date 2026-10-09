@@ -29,16 +29,8 @@ class MarksRepository(private val db: FirebaseFirestore) {
 
     companion object {
         fun resolveFirestore(context: Context): FirebaseFirestore {
-            val dbId = try {
-                context.applicationContext.getString(R.string.firestore_database_id)
-            } catch (e: Exception) {
-                ""
-            }
-            return if (dbId.isBlank() || dbId == "(default)") {
-                FirebaseFirestore.getInstance()
-            } else {
-                FirebaseFirestore.getInstance(dbId)
-            }
+            val dbId = context.applicationContext.getString(R.string.firestore_database_id)
+            return FirebaseFirestore.getInstance(dbId)
         }
     }
 
@@ -97,16 +89,36 @@ class MarksRepository(private val db: FirebaseFirestore) {
     fun observeExamBranches(): Flow<List<ExamBranch>> = callbackFlow {
         var examsList = emptyList<ExamBranch>()
 
+        val defaultExams = listOf(
+            // Engineering
+            ExamBranch(id = "jee_main", name = "JEE Main", displayName = "JEE Main", category = "Engineering", yearsRange = "2026 - 2012", order = 1),
+            ExamBranch(id = "nta_abhyas_eng", name = "NTA Abhyas (Eng)", displayName = "NTA Abhyas", category = "Engineering", yearsRange = "2020", order = 2),
+            ExamBranch(id = "iat_iiser", name = "IAT (IISER)", displayName = "IAT (IISER)", category = "Engineering", yearsRange = "2026 - 2012", order = 3),
+            ExamBranch(id = "jee_adv", name = "JEE Advanced", displayName = "JEE Advanced", category = "Engineering", yearsRange = "2026 - 2006", order = 4),
+            ExamBranch(id = "mht_cet_eng", name = "MHT CET", displayName = "MHT CET", category = "Engineering", yearsRange = "2026 - 2012", order = 5),
+            ExamBranch(id = "comedk", name = "COMEDK", displayName = "COMEDK", category = "Engineering", yearsRange = "2026 - 2012", order = 6),
+            ExamBranch(id = "bitsat", name = "BITSAT", displayName = "BITSAT", category = "Engineering", yearsRange = "2024 - 2009", order = 7),
+            ExamBranch(id = "wbjee", name = "WBJEE", displayName = "WBJEE", category = "Engineering", yearsRange = "2026 - 2012", order = 8),
+            ExamBranch(id = "kcet", name = "KCET", displayName = "KCET", category = "Engineering", yearsRange = "2026 - 2012", order = 9),
+            ExamBranch(id = "ap_eamcet", name = "AP EAMCET", displayName = "AP EAMCET", category = "Engineering", yearsRange = "2025 - 2012", order = 10),
+            ExamBranch(id = "ts_eamcet", name = "TS EAMCET", displayName = "TS EAMCET", category = "Engineering", yearsRange = "2025 - 2012", order = 11),
+            ExamBranch(id = "viteee", name = "VITEEE", displayName = "VITEEE", category = "Engineering", yearsRange = "2024 - 2006", order = 12),
+            ExamBranch(id = "met_manipal", name = "Manipal (MET)", displayName = "Manipal (MET)", category = "Engineering", yearsRange = "2024 - 2010", order = 13),
+            ExamBranch(id = "nest_niser", name = "NEST (NISER)", displayName = "NEST (NISER)", category = "Engineering", yearsRange = "2026 - 2012", order = 14),
+            ExamBranch(id = "kvpy", name = "KVPY", displayName = "KVPY", category = "Engineering", yearsRange = "2020 - 2010", order = 15),
+            ExamBranch(id = "nda", name = "NDA", displayName = "NDA", category = "Engineering", yearsRange = "2026 - 2012", order = 16),
+
+            // Medical
+            ExamBranch(id = "neet", name = "NEET", displayName = "NEET", category = "Medical", yearsRange = "2026 - 2012", order = 101),
+            ExamBranch(id = "aiims", name = "AIIMS", displayName = "AIIMS", category = "Medical", yearsRange = "2019 - 2001", order = 102),
+            ExamBranch(id = "nta_abhyas_med", name = "NTA Abhyas (Med)", displayName = "NTA Abhyas", category = "Medical", yearsRange = "2020", order = 103),
+            ExamBranch(id = "jipmer", name = "JIPMER", displayName = "JIPMER", category = "Medical", yearsRange = "2019 - 2004", order = 104),
+            ExamBranch(id = "mht_cet_med", name = "MHT CET (Med)", displayName = "MHT CET - Medical", category = "Medical", yearsRange = "2026", order = 105)
+        )
+
         fun emitCombined() {
-            val sorted = examsList.distinctBy { it.name.lowercase() }.sortedBy { it.order }
-            if (sorted.isEmpty()) {
-                trySend(listOf(
-                    ExamBranch(id = "neet", name = "NEET", displayName = "NEET", order = 1),
-                    ExamBranch(id = "jee_main", name = "JEE", displayName = "JEE Main", order = 2)
-                ))
-            } else {
-                trySend(sorted)
-            }
+            val combined = (examsList + defaultExams).distinctBy { it.id.lowercase() }.sortedBy { it.order }
+            trySend(combined)
         }
 
         val examsListener = db.collection("Exams").addSnapshotListener { snapshot, error ->
@@ -115,11 +127,12 @@ class MarksRepository(private val db: FirebaseFirestore) {
             }
             val list = mutableListOf<ExamBranch>()
             snapshot?.documents?.forEach { doc ->
-                val rawName = doc.getString("name") ?: doc.id
-                val normalizedName = if (rawName.contains("jee", ignoreCase = true)) "JEE" else if (rawName.contains("neet", ignoreCase = true)) "NEET" else rawName
-                val displayName = doc.getString("displayName") ?: normalizedName
-                val order = (doc.get("order") as? Number)?.toInt() ?: if (normalizedName == "NEET") 1 else 2
-                list.add(ExamBranch(id = doc.id, name = normalizedName, displayName = displayName, order = order))
+                val rawName = doc.getString("name") ?: doc.getString("displayName") ?: doc.id
+                val displayName = doc.getString("displayName") ?: rawName
+                val category = doc.getString("category") ?: if (rawName.contains("neet", true) || rawName.contains("aiims", true) || rawName.contains("jipmer", true)) "Medical" else "Engineering"
+                val years = doc.getString("yearsRange") ?: doc.getString("years") ?: "2026 - 2012"
+                val order = (doc.get("order") as? Number)?.toInt() ?: 50
+                list.add(ExamBranch(id = doc.id, name = rawName, displayName = displayName, category = category, yearsRange = years, order = order))
             }
             if (list.isNotEmpty()) {
                 examsList = list

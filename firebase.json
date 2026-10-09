@@ -4,6 +4,11 @@
       "database": "(default)",
       "rules": "firestore.rules",
       "indexes": "firestore.indexes.json"
+    },
+    {
+      "database": "ai-studio-android-cybnates-09060f61-c67d-4e5b-952f-b39123dfe1b3",
+      "rules": "firestore.rules",
+      "indexes": "firestore.indexes.json"
     }
   ],
   "storage": {

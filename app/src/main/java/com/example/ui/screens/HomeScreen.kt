@@ -196,62 +196,91 @@ fun HomeScreen(
                 )
             }
 
-            // 2. EXAM BRANCHES SECTION (JEE, NEET, and any future exams dynamically loaded)
+            // 2. EXAM BRANCHES SECTION (Engineering and Medical Chapter-wise PYQs)
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 16.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Chapter-wise Previous Year Questions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "2001 - 2026",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MarksPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Text(
-                        text = "Exam Section / Target",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Real-time Sync",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MarksSuccess,
-                        fontWeight = FontWeight.SemiBold
+                        text = "Engineering & Medical 15+ Years Solved Papers",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(10.dp))
 
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(examBranches) { branch ->
-                        val isSelected = selectedBranch.equals(branch.name, ignoreCase = true)
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .clickable { viewModel.selectExamBranch(branch.name) }
-                                .testTag("exam_branch_${branch.name.lowercase()}"),
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (isSelected) MarksPrimary else MaterialTheme.colorScheme.surface,
-                            shadowElevation = if (isSelected) 4.dp else 1.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = if (branch.name.equals("jee", true)) "🎯" else if (branch.name.equals("neet", true)) "🩺" else "📚",
-                                    fontSize = 16.sp
-                                )
-                                Text(
-                                    text = branch.name,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Engineering Exams Subsection
+                val engineeringExams = examBranches.filter { it.category == "Engineering" || (!it.category.equals("Medical", true) && !it.id.contains("neet") && !it.id.contains("aiims") && !it.id.contains("jipmer")) }
+                val medicalExams = examBranches.filter { it.category == "Medical" || it.id.contains("neet") || it.id.contains("aiims") || it.id.contains("jipmer") }
+
+                if (engineeringExams.isNotEmpty()) {
+                    Text(
+                        text = "Engineering",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(engineeringExams) { branch ->
+                            val isSelected = selectedBranch.equals(branch.name, ignoreCase = true) || selectedBranch.equals(branch.displayName, ignoreCase = true)
+                            ExamGridCardItem(
+                                branch = branch,
+                                isSelected = isSelected,
+                                onClick = { viewModel.selectExamBranch(branch.name) }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (medicalExams.isNotEmpty()) {
+                    Text(
+                        text = "Medical",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MarksSuccess,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items(medicalExams) { branch ->
+                            val isSelected = selectedBranch.equals(branch.name, ignoreCase = true) || selectedBranch.equals(branch.displayName, ignoreCase = true)
+                            ExamGridCardItem(
+                                branch = branch,
+                                isSelected = isSelected,
+                                onClick = { viewModel.selectExamBranch(branch.name) }
+                            )
                         }
                     }
                 }
@@ -718,5 +747,81 @@ private fun RecentAttemptCard(
         }
     }
 }
+
+@Composable
+fun ExamGridCardItem(
+    branch: ExamBranch,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .width(120.dp)
+            .height(115.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) com.example.ui.theme.BumblebeeYellow else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .testTag("exam_card_${branch.id}"),
+        shape = RoundedCornerShape(16.dp),
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        shadowElevation = if (isSelected) 3.dp else 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(
+                        when {
+                            branch.category.equals("Medical", true) -> Color(0xFF10B981).copy(alpha = 0.18f)
+                            branch.id.contains("adv") -> Color(0xFFEF4444).copy(alpha = 0.18f)
+                            branch.id.contains("iiser") || branch.id.contains("niser") -> Color(0xFF8B5CF6).copy(alpha = 0.18f)
+                            else -> Color(0xFFF59E0B).copy(alpha = 0.18f)
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = when {
+                        branch.category.equals("Medical", true) -> "🩺"
+                        branch.id.contains("adv") -> "⚙️"
+                        branch.id.contains("iiser") || branch.id.contains("niser") -> "🔬"
+                        branch.id.contains("bitsat") -> "🏛️"
+                        branch.id.contains("kvpy") -> "🌟"
+                        branch.id.contains("nda") -> "🛡️"
+                        else -> "🎯"
+                    },
+                    fontSize = 16.sp
+                )
+            }
+            Column {
+                Text(
+                    text = branch.displayName.ifBlank { branch.name },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = branch.yearsRange.ifBlank { "2026 - 2012" },
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
 
 

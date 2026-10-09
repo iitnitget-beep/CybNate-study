@@ -644,67 +644,25 @@ fun AuthScreen(
                                 )
                             } else if (isAlphabetOrEmail) {
                                 isLoading = true
-                                if (authModeTab == 0) {
-                                    // Sign In directly via Firebase Auth
-                                    AuthManager.signInWithEmail(
-                                        context = context,
-                                        email = identifierInput.trim(),
-                                        password = passwordInput,
-                                        onSuccess = { displayName ->
-                                            isLoading = false
-                                            onGoogleAuthSuccess(displayName)
-                                        },
-                                        onError = { err ->
-                                            isLoading = false
-                                            refreshLockout()
-                                            coroutineScope.launch {
-                                                if (err.contains("Account does not exist", true) || err.contains("user-not-found", true)) {
-                                                    snackbarHostState.showSnackbar("No account found with this email. Please Sign Up first!")
-                                                    authModeTab = 1
-                                                } else {
-                                                    snackbarHostState.showSnackbar(err)
-                                                }
-                                            }
-                                        },
-                                        scope = coroutineScope
-                                    )
-                                } else {
-                                    if (!isNameValid) {
+                                AuthManager.signInWithGoogle(
+                                    context = context,
+                                    credentialManager = credentialManager,
+                                    onAuthSuccess = { displayName ->
+                                        isLoading = false
+                                        LoginLockoutManager.resetAttempts(context)
+                                        onGoogleAuthSuccess(displayName)
+                                    },
+                                    onAuthError = { err ->
+                                        isLoading = false
                                         coroutineScope.launch {
-                                            snackbarHostState.showSnackbar("Full Name can only contain letters (no numbers or symbols)")
+                                            snackbarHostState.showSnackbar(err)
                                         }
-                                        return@Button
+                                    },
+                                    scope = coroutineScope,
+                                    onAuthCancelled = {
+                                        isLoading = false
                                     }
-                                    if (!isPasswordValid) {
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar("Password must be at least 8 characters and contain at least one number and one special character")
-                                        }
-                                        return@Button
-                                    }
-
-                                    AuthManager.signUpWithEmail(
-                                        context = context,
-                                        email = identifierInput.trim(),
-                                        password = passwordInput,
-                                        displayName = nameInput.trim(),
-                                        onSuccess = { displayName ->
-                                            isLoading = false
-                                            onGoogleAuthSuccess(displayName)
-                                        },
-                                        onError = { err ->
-                                            isLoading = false
-                                            coroutineScope.launch {
-                                                if (err.contains("already exists", true) || err.contains("already registered", true) || err.contains("already in use", true)) {
-                                                    snackbarHostState.showSnackbar("An account with this email already exists! Switched to Sign In.")
-                                                    authModeTab = 0
-                                                } else {
-                                                    snackbarHostState.showSnackbar(err)
-                                                }
-                                            }
-                                        },
-                                        scope = coroutineScope
-                                    )
-                                }
+                                )
                             }
                         },
                         enabled = canSubmit && !isLoading,
