@@ -3,49 +3,51 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
+    // app.always() is enforced once App Check is enabled on the project.
+    function appVerified() { return request.auth != null && request.app != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function isStr(v, max) { return v is string && v.size() <= max; }
     function isInt(v, lo, hi) { return v is int && v >= lo && v <= hi; }
     function isNum(v, lo, hi) { return v is number && v >= lo && v <= hi; }
 
     // ---------- Exam content: signed-in users can read, nobody can write from the client ----------
-    match /Exams/{document=**}  { allow read: if signedIn(); allow write: if false; }
-    match /exams/{document=**}  { allow read: if signedIn(); allow write: if false; }
-    match /categories/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Categories/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /subjects/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Subjects/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /tests/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Tests/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /chapters/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Chapters/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /questions/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Questions/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /modules/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Modules/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /lessons/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Lessons/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /syllabus/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Syllabus/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /mockTests/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /MockTests/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /testSeries/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /TestSeries/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /practice/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Practice/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /content/{document=**} { allow read: if signedIn(); allow write: if false; }
-    match /Content/{document=**} { allow read: if signedIn(); allow write: if false; }
+    match /Exams/{document=**}  { allow read: if appVerified(); allow write: if false; }
+    match /exams/{document=**}  { allow read: if appVerified(); allow write: if false; }
+    match /categories/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Categories/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /subjects/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Subjects/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /tests/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Tests/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /chapters/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Chapters/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /questions/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Questions/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /modules/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Modules/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /lessons/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Lessons/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /syllabus/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Syllabus/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /mockTests/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /MockTests/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /testSeries/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /TestSeries/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /practice/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Practice/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /content/{document=**} { allow read: if appVerified(); allow write: if false; }
+    match /Content/{document=**} { allow read: if appVerified(); allow write: if false; }
 
-    match /{path=**}/Questions/{id} { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/questions/{id} { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/Tests/{id}     { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/tests/{id}     { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/Chapters/{id}  { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/chapters/{id}  { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/Subjects/{id}  { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/subjects/{id}  { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/Topics/{id}    { allow read: if signedIn(); allow write: if false; }
-    match /{path=**}/topics/{id}    { allow read: if signedIn(); allow write: if false; }
+    match /{path=**}/Questions/{id} { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/questions/{id} { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/Tests/{id}     { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/tests/{id}     { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/Chapters/{id}  { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/chapters/{id}  { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/Subjects/{id}  { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/subjects/{id}  { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/Topics/{id}    { allow read: if appVerified(); allow write: if false; }
+    match /{path=**}/topics/{id}    { allow read: if appVerified(); allow write: if false; }
 
     // ---------- User data ----------
     match /users/{uid} {

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug-build-only overlay: registers the App Check debug token so local
+     emulator testing works. This file is merged ONLY into debug builds and is
+     never present in release artifacts. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <meta-data
+            android:name="com.google.firebase.appcheck.debug.DEBUG_TOKEN"
+            android:value="a78f2e2d-3c99-4d62-b91c-7f5b89a3dfcb" />
+    </application>
+</manifest>

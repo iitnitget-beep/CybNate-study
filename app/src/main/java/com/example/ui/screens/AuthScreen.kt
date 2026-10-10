@@ -119,6 +119,13 @@ fun AuthScreen(
     // Phone OTP state
     var phoneVerificationId by remember { mutableStateOf<String?>(null) }
     var otpInput by remember { mutableStateOf("") }
+    var otpResendCooldown by remember { mutableIntStateOf(0) } // seconds until resend allowed
+    LaunchedEffect(otpResendCooldown) {
+        if (otpResendCooldown > 0) {
+            kotlinx.coroutines.delay(1000)
+            otpResendCooldown -= 1
+        }
+    }
     var isOtpSent by remember { mutableStateOf(false) }
 
     // Lockout state
@@ -498,6 +505,12 @@ fun AuthScreen(
                                                 }
                                                 return@Button
                                             }
+                                            if (otpResendCooldown > 0) {
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar("Please wait ${otpResendCooldown}s before requesting a new OTP.")
+                                                }
+                                                return@Button
+                                            }
                                             val currentActivity = context.findActivity()
                                             if (currentActivity == null) {
                                                 coroutineScope.launch {
@@ -513,6 +526,7 @@ fun AuthScreen(
                                                     isLoading = false
                                                     phoneVerificationId = vId
                                                     isOtpSent = true
+                                                    otpResendCooldown = 60
                                                     coroutineScope.launch {
                                                         snackbarHostState.showSnackbar("OTP sent successfully to your number!")
                                                     }
@@ -531,7 +545,7 @@ fun AuthScreen(
                                                 scope = coroutineScope
                                             )
                                         },
-                                        enabled = areInputsEnabled,
+                                        enabled = areInputsEnabled && otpResendCooldown == 0,
                                         shape = RoundedCornerShape(12.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = MarksSecondary),
                                         modifier = Modifier
@@ -541,6 +555,8 @@ fun AuthScreen(
                                     ) {
                                         if (isLoading) {
                                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                                        } else if (otpResendCooldown > 0) {
+                                            Text("Resend available in ${otpResendCooldown}s", fontWeight = FontWeight.Bold)
                                         } else {
                                             Text("Send OTP", fontWeight = FontWeight.Bold)
                                         }
@@ -646,7 +662,6 @@ fun AuthScreen(
                                         password = passwordInput,
                                         onSuccess = { displayName ->
                                             isLoading = false
-                                            LoginLockoutManager.resetAttempts(context)
                                             onGoogleAuthSuccess(displayName)
                                         },
                                         onError = { err ->
@@ -670,7 +685,6 @@ fun AuthScreen(
                                         displayName = finalDisplayName,
                                         onSuccess = { displayName ->
                                             isLoading = false
-                                            LoginLockoutManager.resetAttempts(context)
                                             onGoogleAuthSuccess(displayName)
                                         },
                                         onError = { err ->
@@ -751,7 +765,6 @@ fun AuthScreen(
                                     credentialManager = credentialManager,
                                     onAuthSuccess = { displayName ->
                                         isLoading = false
-                                        LoginLockoutManager.resetAttempts(context)
                                         onGoogleAuthSuccess(displayName)
                                     },
                                     onAuthError = { errorMsg ->

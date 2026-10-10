@@ -69,7 +69,17 @@ object AuthManager {
 
             override fun onVerificationFailed(e: com.google.firebase.FirebaseException) {
                 Log.e("Auth", "Phone verification failed", e)
-                onError(e.localizedMessage ?: "Failed to send OTP")
+                val msg = e.localizedMessage ?: ""
+                val friendly = when {
+                    msg.contains("quota", true) || msg.contains("billing", true) ->
+                        "SMS quota for today is used up. Try again later or use Google/Email sign-in."
+                    msg.contains("too many", true) || msg.contains("throttl", true) ->
+                        "Too many OTP requests. Please wait a few minutes and try again."
+                    msg.contains("invalid phone", true) || msg.contains("phone number", true) ->
+                        "That phone number is not accepted. Please check it and try again."
+                    else -> "Failed to send OTP. Please try again in a moment."
+                }
+                onError(friendly)
             }
 
             override fun onCodeSent(
@@ -127,8 +137,16 @@ object AuthManager {
                 onSuccess(result.user?.phoneNumber ?: "User")
             } catch (e: Exception) {
                 Log.e("Auth", "Phone OTP sign in failed", e)
-                val lockWarning = LoginLockoutManager.recordFailedAttempt(context)
-                onError("Invalid OTP. $lockWarning")
+                val raw = e.localizedMessage ?: ""
+                if (raw.contains("invalid code", true) || raw.contains("expired", true)) {
+                    val lockWarning = LoginLockoutManager.recordFailedAttempt(context)
+                    onError("Invalid or expired OTP. $lockWarning")
+                } else if (raw.contains("too many", true)) {
+                    onError("Too many wrong attempts. Resend a fresh OTP and try again.")
+                } else {
+                    val lockWarning = LoginLockoutManager.recordFailedAttempt(context)
+                    onError("OTP verification failed. $lockWarning")
+                }
             }
         }
     }
@@ -169,29 +187,18 @@ object AuthManager {
                 )
                 onSuccess(resolvedName)
             } catch (e: FirebaseAuthInvalidUserException) {
+                // Enumeration-safe: identical message for missing accounts & wrong passwords
+                Log.w("Auth", "Email sign-in failed: account-not-found")
                 val warning = LoginLockoutManager.recordFailedAttempt(context)
-                onError("No account found with this email/username. $warning")
+                onError("Invalid email/username or password. $warning")
             } catch (e: FirebaseAuthInvalidCredentialsException) {
+                Log.w("Auth", "Email sign-in failed: bad-credentials")
                 val warning = LoginLockoutManager.recordFailedAttempt(context)
-                onError("Incorrect password. $warning")
+                onError("Invalid email/username or password. $warning")
             } catch (e: Exception) {
-                Log.w("Auth", "Firebase email sign-in fallback: ${e.message}")
-                if (password.length >= 6) {
-                    LoginLockoutManager.resetAttempts(context)
-                    val resolvedName = identifier.substringBefore("@").replaceFirstChar { it.uppercase() }
-                    UserSessionManager.saveSession(
-                        context = context,
-                        userName = resolvedName,
-                        isGuest = false,
-                        userId = "local_${identifier.hashCode()}",
-                        userEmail = formattedEmail,
-                        authMethod = "email"
-                    )
-                    onSuccess(resolvedName)
-                } else {
-                    val warning = LoginLockoutManager.recordFailedAttempt(context)
-                    onError("Authentication failed: ${e.localizedMessage ?: "Invalid credentials"}. $warning")
-                }
+                Log.w("Auth", "Email sign-in failed: ${e.javaClass.simpleName}")
+                val warning = LoginLockoutManager.recordFailedAttempt(context)
+                onError("Sign-in failed. Please check your connection and try again. $warning")
             }
         }
     }
@@ -211,6 +218,10 @@ object AuthManager {
             return
         }
 
+        if (password.length < 6) {
+            onError("Password must be at least 6 characters long.")
+            return
+        }
         val formattedEmail = if (identifier.contains("@")) {
             identifier
         } else {
@@ -243,21 +254,8 @@ object AuthManager {
             } catch (e: FirebaseAuthUserCollisionException) {
                 onError("An account with this email/username already exists. Please Sign In.")
             } catch (e: Exception) {
-                Log.w("Auth", "Firebase email sign-up fallback: ${e.message}")
-                if (password.length >= 6) {
-                    LoginLockoutManager.resetAttempts(context)
-                    UserSessionManager.saveSession(
-                        context = context,
-                        userName = cleanName,
-                        isGuest = false,
-                        userId = "local_${identifier.hashCode()}",
-                        userEmail = formattedEmail,
-                        authMethod = "email"
-                    )
-                    onSuccess(cleanName)
-                } else {
-                    onError("Failed to create account: ${e.localizedMessage ?: "Unknown error"}")
-                }
+                Log.w("Auth", "Email sign-up failed: ${e.javaClass.simpleName}")
+                onError("Could not create account. Please check your connection and try again.")
             }
         }
     }

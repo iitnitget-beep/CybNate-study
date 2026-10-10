@@ -48,6 +48,12 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.collectAsState
 import com.example.ui.components.CybertronTransitions
 
@@ -66,34 +72,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-            val app = FirebaseApp.initializeApp(this) ?: FirebaseApp.getInstance()
-            val debugToken = "a78f2e2d-3c99-4d62-b91c-7f5b89a3dfcb"
-            try {
-                val persistenceKey = app.persistenceKey
-                val storeName = "com.google.firebase.appcheck.debug.store.$persistenceKey"
-                getSharedPreferences(storeName, android.content.Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("com.google.firebase.appcheck.debug.DEBUG_SECRET", debugToken)
-                    .apply()
-                getSharedPreferences("com.google.firebase.appcheck.debug.store._DEFAULT", android.content.Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("com.google.firebase.appcheck.debug.DEBUG_SECRET", debugToken)
-                    .apply()
-                Log.d("MainActivity", "Injected debug token $debugToken into $storeName")
-            } catch (e: Exception) {
-                Log.w("MainActivity", "Failed to pre-seed debug token store", e)
-            }
+            FirebaseApp.initializeApp(this) ?: FirebaseApp.getInstance()
 
             val appCheck = FirebaseAppCheck.getInstance()
-            // Always use Debug provider for testing/preview builds to guarantee zero App Check token issues
-            appCheck.installAppCheckProviderFactory(
-                DebugAppCheckProviderFactory.getInstance()
-            )
-            Log.d("MainActivity", "Firebase App Check initialized with Debug provider")
-            
-            // Auto-reset login lockout on app start during testing/preview to prevent testing blockages
-            LoginLockoutManager.resetAttempts(this)
-            Log.d("MainActivity", "Login lockout status reset for developer testing")
+            if (BuildConfig.DEBUG) {
+                // Debug builds: Debug provider so local emulator/preview testing needs no Play Integrity.
+                appCheck.installAppCheckProviderFactory(
+                    DebugAppCheckProviderFactory.getInstance()
+                )
+                Log.d("MainActivity", "Firebase App Check: Debug provider (debug build only)")
+            } else {
+                // Release builds: Play Integrity protects Firebase APIs from non-app clients.
+                appCheck.installAppCheckProviderFactory(
+                    PlayIntegrityAppCheckProviderFactory.getInstance()
+                )
+                Log.d("MainActivity", "Firebase App Check: Play Integrity provider")
+            }
         } catch (e: Exception) {
             Log.e("MainActivity", "Firebase App Check initialization failed", e)
         }
@@ -211,7 +205,23 @@ fun CybNateAppContent() {
         }
     }
 
-    if (!isUserLoggedIn) {
+    // Smooth animated crossfade between Auth screen and the main app shell
+    AnimatedContent(
+        targetState = isUserLoggedIn,
+        transitionSpec = {
+            (fadeIn(animationSpec = tween(400)) + scaleIn(
+                initialScale = 0.96f,
+                animationSpec = tween(400, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+            )).togetherWith(
+                fadeOut(animationSpec = tween(220)) + scaleOut(
+                    targetScale = 1.04f,
+                    animationSpec = tween(220)
+                )
+            )
+        },
+        label = "auth_gate_transition"
+    ) { loggedIn ->
+        if (!loggedIn) {
         AuthScreen(
             onGoogleAuthSuccess = { displayName ->
                 val user = Firebase.auth.currentUser
@@ -240,7 +250,7 @@ fun CybNateAppContent() {
                 )
             }
         )
-    } else {
+        } else {
         // Authenticated user session - instantiate ViewModel safely
         val viewModel: MarksViewModel = viewModel()
 
@@ -497,6 +507,7 @@ fun CybNateAppContent() {
                     )
                 }
             }
+        }
         }
     }
 }
