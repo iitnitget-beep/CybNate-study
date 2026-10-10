@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "324835447718",
+    "firebase_url": "https://deeproot-e4d17-default-rtdb.firebaseio.com",
+    "project_id": "deeproot-e4d17",
+    "storage_bucket": "deeproot-e4d17.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324835447718:android:7b76a9b3ee1ed54a0d3567",
+        "android_client_info": {
+          "package_name": "com.deeproot.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324835447718-otkurbuof6b9ccdf6a79kbfh38p3j6h0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.deeproot.app",
+            "certificate_hash": "8b605c3ee96ab4eedcf9790e4a464ac76d7d3005"
+          }
+        },
+        {
+          "client_id": "324835447718-isavg1oqigfka6mnb93o96aijqaddloa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDT8c_utDs5iqdVJGann8Mgqtb9KhDp5p8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324835447718-isavg1oqigfka6mnb93o96aijqaddloa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

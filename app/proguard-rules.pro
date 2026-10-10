@@ -1,12 +1,23 @@
-# CybNate release hardening rules (R8)
-#
-# Minify + obfuscation are enabled in build.gradle.kts. Firebase/Compose ship
-# their own consumer rules, so only app-specific keep rules live here.
+# DeepRoot — R8 rules (security-first: obfuscate everything, keep only what's required)
 
-# Keep line numbers & source names minimally for readable release crash reports
-# while still allowing full obfuscation. The original file name is hidden.
--keepattributes SourceFile,LineNumberTable
+# --- AndroidX / Compose (safe defaults) ---
+-keep class androidx.compose.runtime.** { *; }
+-dontwarn androidx.**
+
+# --- Firebase ---
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# --- OkHttp / logging interceptor ---
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-keepattributes Signature, InnerClasses, EnclosingMethod, *Annotation*
+
+# Hide original file names in stack traces (harder to reverse-engineer)
 -renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
 
-# AppCheck debug provider is never present in release; do not keep it.
--dontwarn com.google.firebase.appcheck.debug.**
+# Keep app entry points only (everything else gets obfuscated)
+-keep class com.deeproot.app.DeepRootApplication { *; }
+-keep class com.deeproot.app.MainActivity { *; }

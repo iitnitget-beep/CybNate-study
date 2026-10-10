@@ -1,6 +1,0 @@
-{
-  "name": "CybNate",
-  "description": "Comprehensive exam prep and test series app inspired by CybNate with real-time test engine, palette, instant analysis, and review.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

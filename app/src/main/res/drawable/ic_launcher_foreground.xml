@@ -1,41 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Futuristic Metallic Cyber-Matrix Insignia (strictly in safe zone 27-81) -->
-
-    <!-- Outer Metallic Diamond Armor Shield -->
-    <path
-        android:fillColor="#E2E8F0"
-        android:pathData="M54,28 L78,44 L78,64 L54,80 L30,64 L30,44 Z" />
-
-    <!-- Inner Titanium Core Cutout -->
-    <path
-        android:fillColor="#0F172A"
-        android:pathData="M54,34 L72,46 L72,62 L54,74 L36,62 L36,46 Z" />
-
-    <!-- Central Cyber Matrix Star / Stinger in Amber Gold -->
-    <path
-        android:fillColor="#FFB800"
-        android:pathData="M54,39 L57,51 L69,54 L57,57 L54,69 L51,57 L39,54 L51,51 Z" />
-
-    <!-- Top Chrome Glint Wing -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,31 L64,38 L54,42 L44,38 Z" />
-
-    <!-- Left & Right Energon Cyan Sensor Nodes -->
-    <path
-        android:fillColor="#00E5FF"
-        android:pathData="M33,48 L37,45 L37,55 L33,52 Z" />
-    <path
-        android:fillColor="#00E5FF"
-        android:pathData="M75,48 L71,45 L71,55 L75,52 Z" />
-
-    <!-- Bottom Precision Targeting Chevron -->
-    <path
-        android:fillColor="#CBD5E1"
-        android:pathData="M54,77 L62,71 L60,69 L54,73 L48,69 L46,71 Z" />
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- DeepRoot: a sprouting root/seed mark -->
+    <path android:fillColor="#2E7D5B"
+        android:pathData="M54,78 C54,64 46,56 34,56 C46,50 54,58 54,58 C54,58 62,50 74,56 C62,56 54,64 54,78 Z"/>
+    <path android:fillColor="#4ADE80"
+        android:pathData="M54,40 C50,32 50,26 54,18 C58,26 58,32 54,40 Z"/>
+    <path android:fillColor="#D9A441"
+        android:pathData="M54,44 A6,6 0 1,0 54,56 A6,6 0 1,0 54,44 Z"/>
 </vector>

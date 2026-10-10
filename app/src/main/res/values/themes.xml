@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <style name="Theme.DeepRoot" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/seed_dark</item>
+        <item name="android:navigationBarColor">@color/seed_dark</item>
+        <item name="android:windowBackground">@color/seed_dark</item>
+    </style>
+    <style name="Theme.DeepRoot.Splash">
+        <item name="android:windowBackground">@color/seed_dark</item>
+    </style>
 </resources>

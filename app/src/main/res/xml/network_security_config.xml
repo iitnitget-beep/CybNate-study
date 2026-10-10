@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Strictly block all cleartext HTTP traffic to prevent packet sniffing / MitM attacks -->
+    <!-- Block all cleartext traffic: nothing about our API can be sniffed -->
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
